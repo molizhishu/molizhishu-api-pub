@@ -112,6 +112,8 @@ cp docker.env.example docker.env
 编辑 `docker.env`，至少修改：
 
 ```dotenv
+WEB_PORT=18000
+API_PORT=18080
 MOLIZHISHU_TOKEN=你的模力指数 API Key
 MOLIZHISHU_ALLOW_API_KEY_UPDATE=true
 MYSQL_ROOT_PASSWORD=安全的 root 密码
@@ -132,11 +134,43 @@ docker compose up -d --build
 
 `scripts/docker-up.sh` 会自动读取 `docker.env`，并兼容不支持 `docker compose --env-file` 的老版本 Docker。
 
+如果服务器构建时 Composer 下载依赖遇到 GitHub `504`，可以直接重试 `sh scripts/docker-up.sh`。Dockerfile 默认使用 Composer 镜像源并内置重试；如需切换镜像源：
+
+```bash
+docker compose build --build-arg COMPOSER_REPO_PACKAGIST=https://repo.packagist.org web php worker
+docker compose up -d
+```
+
+默认 Composer 源为：
+
+```dotenv
+COMPOSER_REPO_PACKAGIST=https://mirrors.aliyun.com/composer/
+```
+
 默认访问：
 
 ```text
-http://127.0.0.1:18080
+前端：http://127.0.0.1:18000
+API：http://127.0.0.1:18080
 ```
+
+Docker 默认镜像和容器命名：
+
+| 服务 | 镜像 | 容器 | 端口 |
+| :--- | :--- | :--- | :--- |
+| 前端 | `molizhishu-api-pub-web` | `molizhishu-api-pub-web` | `${WEB_PORT:-18000}:18000` |
+| PHP API | `molizhishu-api-pub-php` | `molizhishu-api-pub-php` | `${API_PORT:-18080}:18080` |
+| 同步进程 | `molizhishu-api-pub-worker` | `molizhishu-api-pub-worker` | 不暴露端口 |
+| MySQL | `mysql:8.4` | `molizhishu-api-pub-db` | 不暴露端口 |
+
+容器职责说明：
+
+- `molizhishu-api-pub-web`：只负责前端静态页面和反向代理，默认监听 `18000`。浏览器访问这个容器即可使用控制台。
+- `molizhishu-api-pub-php`：负责 PHP API、Callback 接收和设置保存，默认监听 `18080`。
+- `molizhishu-api-pub-worker`：负责后台补偿同步，把未完成或部分完成的远端任务定期拉回本地数据库。它不是 API 服务，不接收浏览器请求，因此不暴露端口。
+- `molizhishu-api-pub-db`：MySQL 数据库，只在 Compose 内部网络中供 PHP API 和 worker 访问。
+
+`worker` 没有合并进 `php` 容器，是为了保持一个容器只运行一种长期进程：API 容器专注 HTTP 请求，worker 容器专注后台同步。这样日志更清楚，任一进程异常重启时不会互相影响，也方便以后按需扩容 API 或单独控制同步进程数量。
 
 更多部署说明见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
 
@@ -144,6 +178,8 @@ http://127.0.0.1:18080
 
 | 环境变量 | 说明 | 默认值 |
 | :--- | :--- | :--- |
+| `WEB_PORT` | 前端 Web 访问端口 | `18000` |
+| `API_PORT` | PHP API 访问端口 | `18080` |
 | `APP_DEBUG` | 是否开启调试 | `false` |
 | `MOLIZHISHU_BASE_URL` | 模力指数监控 API 地址 | 官方业务 API |
 | `MOLIZHISHU_CITY_URL` | 区域信息 API 地址 | 官方业务 API |

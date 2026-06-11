@@ -23,15 +23,18 @@ fi
 
 set -a
 # shellcheck disable=SC1090
-. "$ENV_FILE"
+case "$ENV_FILE" in
+  /*|*/*) . "$ENV_FILE" ;;
+  *) . "./$ENV_FILE" ;;
+esac
 set +a
 
 if docker compose version >/dev/null 2>&1; then
-  exec docker compose up -d --build
+  exec docker compose up -d --build --remove-orphans
 fi
 
 if command -v docker-compose >/dev/null 2>&1; then
-  exec docker-compose up -d --build
+  exec docker-compose up -d --build --remove-orphans
 fi
 
 echo "Docker Compose is not available. Install Docker Compose v2 or docker-compose v1." >&2

@@ -1,12 +1,30 @@
 services:
-  app:
+  web:
+    image: molizhishu-api-pub-web:latest
     build:
       context: ..
       dockerfile: php/Dockerfile
-    container_name: molizhishu-app
+      target: web
+    container_name: molizhishu-api-pub-web
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-18080}:80"
+      - "${WEB_PORT:-18000}:18000"
+    depends_on:
+      php:
+        condition: service_started
+
+  php:
+    image: molizhishu-api-pub-php:latest
+    build:
+      context: ..
+      dockerfile: php/Dockerfile
+      target: php-api
+      args:
+        COMPOSER_REPO_PACKAGIST: "${COMPOSER_REPO_PACKAGIST:-https://mirrors.aliyun.com/composer/}"
+    container_name: molizhishu-api-pub-php
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-18080}:18080"
     environment:
       APP_DEBUG: "${APP_DEBUG:-false}"
       MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
@@ -28,12 +46,15 @@ services:
         condition: service_healthy
 
   worker:
+    image: molizhishu-api-pub-worker:latest
     build:
       context: ..
       dockerfile: php/Dockerfile
-    container_name: molizhishu-worker
+      target: php-worker
+      args:
+        COMPOSER_REPO_PACKAGIST: "${COMPOSER_REPO_PACKAGIST:-https://mirrors.aliyun.com/composer/}"
+    container_name: molizhishu-api-pub-worker
     restart: unless-stopped
-    command: ["sh", "scripts/sync-pending-loop.sh"]
     environment:
       APP_DEBUG: "${APP_DEBUG:-false}"
       MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
@@ -58,7 +79,7 @@ services:
 
   db:
     image: mysql:8.4
-    container_name: molizhishu-db
+    container_name: molizhishu-api-pub-db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root_password}"
