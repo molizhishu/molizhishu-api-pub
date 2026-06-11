@@ -1,0 +1,34 @@
+{
+  "name": "molizhishu/monitor-callback",
+  "description": "Molizhishu monitor API callback integration built with ThinkPHP 8.",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.0",
+    "topthink/framework": "^8.0",
+    "topthink/think-orm": "^4.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "app\\": "app/"
+    }
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "@php think service:discover",
+      "@php think vendor:publish"
+    ],
+    "test": "phpunit",
+    "check": [
+      "@test"
+    ]
+  }
+}

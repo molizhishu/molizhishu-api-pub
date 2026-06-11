@@ -1,0 +1,84 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: php/Dockerfile
+    container_name: molizhishu-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-18080}:80"
+    environment:
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
+      MOLIZHISHU_CITY_URL: "${MOLIZHISHU_CITY_URL:-https://business-api.molizhishu.com/api/business/eip-edge/ports/city-info}"
+      MOLIZHISHU_TOKEN: "${MOLIZHISHU_TOKEN:-}"
+      MOLIZHISHU_CALLBACK_URL: "${MOLIZHISHU_CALLBACK_URL:-}"
+      MOLIZHISHU_ALLOW_API_KEY_UPDATE: "${MOLIZHISHU_ALLOW_API_KEY_UPDATE:-true}"
+      MOLIZHISHU_TIMEOUT: "${MOLIZHISHU_TIMEOUT:-30}"
+      MOLIZHISHU_CALLBACK_MAX_BYTES: "${MOLIZHISHU_CALLBACK_MAX_BYTES:-5242880}"
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+      DATABASE_NAME: "${MYSQL_DATABASE:-molizhishu}"
+      DATABASE_USER: "${MYSQL_USER:-molizhishu}"
+      DATABASE_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
+    volumes:
+      - molizhishu_config:/var/www/html/config-data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: php/Dockerfile
+    container_name: molizhishu-worker
+    restart: unless-stopped
+    command: ["sh", "scripts/sync-pending-loop.sh"]
+    environment:
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
+      MOLIZHISHU_CITY_URL: "${MOLIZHISHU_CITY_URL:-https://business-api.molizhishu.com/api/business/eip-edge/ports/city-info}"
+      MOLIZHISHU_TOKEN: "${MOLIZHISHU_TOKEN:-}"
+      MOLIZHISHU_CALLBACK_URL: "${MOLIZHISHU_CALLBACK_URL:-}"
+      MOLIZHISHU_ALLOW_API_KEY_UPDATE: "${MOLIZHISHU_ALLOW_API_KEY_UPDATE:-true}"
+      MOLIZHISHU_TIMEOUT: "${MOLIZHISHU_TIMEOUT:-30}"
+      MOLIZHISHU_CALLBACK_MAX_BYTES: "${MOLIZHISHU_CALLBACK_MAX_BYTES:-5242880}"
+      MOLIZHISHU_SYNC_INTERVAL: "${MOLIZHISHU_SYNC_INTERVAL:-60}"
+      MOLIZHISHU_SYNC_LIMIT: "${MOLIZHISHU_SYNC_LIMIT:-20}"
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+      DATABASE_NAME: "${MYSQL_DATABASE:-molizhishu}"
+      DATABASE_USER: "${MYSQL_USER:-molizhishu}"
+      DATABASE_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
+    volumes:
+      - molizhishu_config:/var/www/html/config-data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    container_name: molizhishu-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root_password}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-molizhishu}"
+      MYSQL_USER: "${MYSQL_USER:-molizhishu}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --init-connect=SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
+    volumes:
+      - molizhishu_mysql:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  molizhishu_mysql:
+  molizhishu_config:
