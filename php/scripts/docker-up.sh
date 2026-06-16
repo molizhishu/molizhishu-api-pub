@@ -30,11 +30,11 @@ esac
 set +a
 
 if docker compose version >/dev/null 2>&1; then
-  exec docker compose up -d --build --remove-orphans
+  exec docker compose up -d --remove-orphans
 fi
 
 if command -v docker-compose >/dev/null 2>&1; then
-  exec docker-compose up -d --build --remove-orphans
+  exec docker-compose up -d --remove-orphans
 fi
 
 echo "Docker Compose is not available. Install Docker Compose v2 or docker-compose v1." >&2

@@ -1,26 +1,91 @@
+# macOS / editors
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
+*.swp
+*.swo
 
-/php/docker.env
+# Local environment and secrets
+**/.env
+**/.env.local
+**/.env.*.local
+**/docker.env
+**/docker.env.local
+**/docker.env.*.local
+!.env.example
+!**/.env.example
+!docker.env.example
+!**/docker.env.example
 
-/php/.env
-/php/.env.local
-/php/vendor/
-/php/.composer-home/
-/php/runtime/
+# Logs and runtime files
 *.log
 *.pid
+*.seed
+*.tmp
+*.temp
+logs/
+**/logs/
 
-/frontend/node_modules/
-/frontend/dist/
-/frontend/*.tsbuildinfo
-/frontend/vite.config.js
-/frontend/vite.config.d.ts
+# Local databases and generated data
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+mysql-data/
+docker-data/
+.data/
 
-/php/.phpunit.cache/
-/php/.phpunit.result.cache
-/.phpunit.result.cache
+# PHP / Composer
+**/vendor/
+**/.composer-home/
+**/runtime/
+**/.phpunit.cache/
+**/.phpunit.result.cache
+.phpunit.result.cache
+
+# Node.js / Vite
+**/node_modules/
+**/dist/
+**/.vite/
+**/*.tsbuildinfo
+**/vite.config.js
+**/vite.config.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+**/env/
+
+# Java / Maven / Gradle
+**/target/
+**/.gradle/
+**/build/
+
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+
+# Rust
+**/target/
+
+# Go
+**/tmp/
+**/bin/
+
+# Test coverage
 coverage/
-
-.vite/
+**/coverage/
+htmlcov/

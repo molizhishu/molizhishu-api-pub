@@ -8,15 +8,16 @@ import type { TaskSummary } from '../api';
 import { StatusBadge } from '../ui/StatusBadge';
 import { AppSelect } from '../ui/AppSelect';
 import { modeLabel, parseJsonArray, platformIcon, platformLabel } from '../molizhishuOptions';
+import { formatDateTime } from '../time';
 
 const statusOptions = [
   { value: '', label: '全部状态' },
-  { value: 'pending', label: 'pending' },
-  { value: 'processing', label: 'processing' },
-  { value: 'completed', label: 'completed' },
-  { value: 'partial_completed', label: 'partial_completed' },
-  { value: 'failed', label: 'failed' },
-  { value: 'stopped', label: 'stopped' }
+  { value: 'pending', label: '待处理' },
+  { value: 'processing', label: '处理中' },
+  { value: 'completed', label: '已完成' },
+  { value: 'partial_completed', label: '部分完成' },
+  { value: 'failed', label: '失败' },
+  { value: 'stopped', label: '已停止' }
 ];
 
 const stoppableStatuses = new Set(['pending', 'processing']);
@@ -210,7 +211,7 @@ export function TaskListPage() {
                       <span className="progressText">{task.completed_items}/{task.total_items}</span>
                       {task.failed_items > 0 && <span className="failText">失败 {task.failed_items}</span>}
                     </td>
-                    <td className="muted">{task.updated_at}</td>
+                    <td className="muted">{formatDateTime(task.updated_at)}</td>
                     <td className="rightCell">
                       <div className="rowActions">
                         {stoppableStatuses.has(task.status) && (

@@ -1,32 +1,50 @@
+version: "2.4"
+
 services:
-  web:
-    image: molizhishu-api-pub-web:latest
-    build:
-      context: ..
-      dockerfile: php/Dockerfile
-      target: web
-    container_name: molizhishu-api-pub-web
+  web-build:
+    image: node:20-alpine
+    container_name: molizhishu-api-pub-php-web-build
+    working_dir: /tmp
     restart: unless-stopped
+    command: sh -c "rm -f /app/frontend-dist/.molizhishu-built && rm -rf /tmp/frontend-build && mkdir -p /tmp/frontend-build && tar -C /app/frontend-src --exclude=node_modules --exclude=dist -cf - . | tar -C /tmp/frontend-build -xf - && cd /tmp/frontend-build && npm ci && npm run build && rm -rf /app/frontend-dist/* && cp -a dist/. /app/frontend-dist/ && touch /app/frontend-dist/.molizhishu-built && tail -f /dev/null"
+    environment:
+      TZ: "${TZ:-Asia/Shanghai}"
+    volumes:
+      - ../frontend:/app/frontend-src:ro
+      - molizhishu_web_dist:/app/frontend-dist
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: molizhishu-api-pub-php-web
+    restart: unless-stopped
+    command: sh -c "until [ -f /usr/share/nginx/html/.molizhishu-built ]; do sleep 1; done; envsubst '$$API_UPSTREAM' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     ports:
       - "${WEB_PORT:-18000}:18000"
+    environment:
+      TZ: "${TZ:-Asia/Shanghai}"
+      API_UPSTREAM: "php:18080"
+    volumes:
+      - molizhishu_web_dist:/usr/share/nginx/html:ro
+      - ../frontend/docker/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
     depends_on:
+      web-build:
+        condition: service_started
       php:
         condition: service_started
 
   php:
-    image: molizhishu-api-pub-php:latest
-    build:
-      context: ..
-      dockerfile: php/Dockerfile
-      target: php-api
-      args:
-        COMPOSER_REPO_PACKAGIST: "${COMPOSER_REPO_PACKAGIST:-https://mirrors.aliyun.com/composer/}"
+    image: php:8.2-apache
     container_name: molizhishu-api-pub-php
     restart: unless-stopped
     ports:
       - "${API_PORT:-18080}:18080"
+    working_dir: /var/www/html
+    entrypoint: ["/bin/sh", "/var/www/html/docker/runtime-php-entrypoint.sh"]
+    command: ["apache2-foreground"]
     environment:
       APP_DEBUG: "${APP_DEBUG:-false}"
+      TZ: "${TZ:-Asia/Shanghai}"
+      COMPOSER_REPO_PACKAGIST: "${COMPOSER_REPO_PACKAGIST:-https://mirrors.aliyun.com/composer/}"
       MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
       MOLIZHISHU_CITY_URL: "${MOLIZHISHU_CITY_URL:-https://business-api.molizhishu.com/api/business/eip-edge/ports/city-info}"
       MOLIZHISHU_TOKEN: "${MOLIZHISHU_TOKEN:-}"
@@ -40,23 +58,24 @@ services:
       DATABASE_USER: "${MYSQL_USER:-molizhishu}"
       DATABASE_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
     volumes:
+      - .:/var/www/html
+      - molizhishu_vendor:/var/www/html/vendor
       - molizhishu_config:/var/www/html/config-data
     depends_on:
       db:
         condition: service_healthy
 
   worker:
-    image: molizhishu-api-pub-worker:latest
-    build:
-      context: ..
-      dockerfile: php/Dockerfile
-      target: php-worker
-      args:
-        COMPOSER_REPO_PACKAGIST: "${COMPOSER_REPO_PACKAGIST:-https://mirrors.aliyun.com/composer/}"
+    image: php:8.2-cli
     container_name: molizhishu-api-pub-worker
     restart: unless-stopped
+    working_dir: /var/www/html
+    entrypoint: ["/bin/sh", "/var/www/html/docker/runtime-php-entrypoint.sh"]
+    command: ["sh", "scripts/sync-pending-loop.sh"]
     environment:
       APP_DEBUG: "${APP_DEBUG:-false}"
+      TZ: "${TZ:-Asia/Shanghai}"
+      COMPOSER_REPO_PACKAGIST: "${COMPOSER_REPO_PACKAGIST:-https://mirrors.aliyun.com/composer/}"
       MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
       MOLIZHISHU_CITY_URL: "${MOLIZHISHU_CITY_URL:-https://business-api.molizhishu.com/api/business/eip-edge/ports/city-info}"
       MOLIZHISHU_TOKEN: "${MOLIZHISHU_TOKEN:-}"
@@ -72,6 +91,8 @@ services:
       DATABASE_USER: "${MYSQL_USER:-molizhishu}"
       DATABASE_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
     volumes:
+      - .:/var/www/html
+      - molizhishu_vendor:/var/www/html/vendor
       - molizhishu_config:/var/www/html/config-data
     depends_on:
       db:
@@ -86,9 +107,11 @@ services:
       MYSQL_DATABASE: "${MYSQL_DATABASE:-molizhishu}"
       MYSQL_USER: "${MYSQL_USER:-molizhishu}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
+      TZ: "${TZ:-Asia/Shanghai}"
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=${MYSQL_TIME_ZONE:-+08:00}
       - --init-connect=SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
     volumes:
       - molizhishu_mysql:/var/lib/mysql
@@ -103,3 +126,5 @@ services:
 volumes:
   molizhishu_mysql:
   molizhishu_config:
+  molizhishu_vendor:
+  molizhishu_web_dist:

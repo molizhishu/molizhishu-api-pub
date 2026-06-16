@@ -1,0 +1,16 @@
+{
+  "name": "molizhishu-api-pub-vue-node",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "check": "node --check src/config.js && node --check src/utils.js && node --check src/database.js && node --check src/client.js && node --check src/repository.js && node --check src/syncer.js && node --check src/scheduler.js && node --check src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "express": "^5.1.0",
+    "mysql2": "^3.15.3"
+  }
+}

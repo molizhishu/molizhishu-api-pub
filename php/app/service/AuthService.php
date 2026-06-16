@@ -16,7 +16,7 @@ class AuthService
             throw new RuntimeException('请输入账号和密码');
         }
 
-        $user = Db::name('admin_users')->where('username', $username)->find();
+        $user = Db::name('geo_admin_users')->where('username', $username)->find();
         if (!$user || (int) $user['status'] !== 1 || !password_verify($password, (string) $user['password_hash'])) {
             throw new RuntimeException('账号或密码不正确');
         }
@@ -25,7 +25,7 @@ class AuthService
         $expiresAt = date('Y-m-d H:i:s', time() + 7 * 86400);
         $now = date('Y-m-d H:i:s');
 
-        Db::name('admin_users')->where('id', $user['id'])->update([
+        Db::name('geo_admin_users')->where('id', $user['id'])->update([
             'auth_token_hash' => hash('sha256', $token),
             'token_expires_at' => $expiresAt,
             'last_login_at' => $now,
@@ -47,7 +47,7 @@ class AuthService
             return null;
         }
 
-        $user = Db::name('admin_users')
+        $user = Db::name('geo_admin_users')
             ->where('auth_token_hash', hash('sha256', $token))
             ->where('status', 1)
             ->find();
@@ -71,7 +71,7 @@ class AuthService
             return;
         }
 
-        Db::name('admin_users')->where('id', $user['id'])->update([
+        Db::name('geo_admin_users')->where('id', $user['id'])->update([
             'auth_token_hash' => null,
             'token_expires_at' => null,
             'updated_at' => date('Y-m-d H:i:s'),

@@ -1085,6 +1085,11 @@ textarea:focus {
   width: 100%;
 }
 
+.appSelect.selectCompact {
+  width: 148px;
+  flex: 0 0 148px;
+}
+
 .appSelectTrigger {
   width: 100%;
   min-height: 40px;
@@ -2539,6 +2544,24 @@ button:disabled {
   font-weight: 700;
 }
 
+.opsDate input {
+  width: 116px;
+  height: 34px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  color: #374151;
+  font: inherit;
+  outline: none;
+}
+
+.opsDate input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+}
+
 .opsSectionTitle {
   color: #64748b;
   font-size: 14px;
@@ -2583,9 +2606,9 @@ button:disabled {
   display: block;
   margin-top: 8px;
   color: #111827;
-  font-size: 25px;
+  font-size: 24px;
   line-height: 1;
-  font-weight: 850;
+  font-weight: 700;
 }
 
 .opsMetric svg {
@@ -3277,9 +3300,13 @@ button:disabled {
   }
 
   .searchBox,
-  .selectCompact,
   .primaryButton.compactAction {
     width: 100%;
+  }
+
+  .appSelect.selectCompact {
+    width: 100%;
+    flex-basis: 100%;
   }
 
   .subtaskSummary {

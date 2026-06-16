@@ -17,10 +17,16 @@ class TaskSyncService
     ) {
     }
 
+    /**
+     * Synchronize one local task from Molizhishu status/result APIs.
+     *
+     * The result endpoint is fetched when the master task is terminal or when
+     * any subtask has completed, so partial results are persisted early.
+     */
     public function syncOne(string $taskId, string $source = 'local-api:manual-compensation'): array
     {
         $started = microtime(true);
-        $eventId = Db::name('compensation_events')->insertGetId([
+        $eventId = Db::name('geo_compensation_events')->insertGetId([
             'task_id' => $taskId,
             'source' => $source,
             'action' => 'status',
@@ -40,7 +46,7 @@ class TaskSyncService
                 $this->tasks->applyRemoteResult($taskId, $result);
             }
 
-            Db::name('compensation_events')->where('id', $eventId)->update([
+            Db::name('geo_compensation_events')->where('id', $eventId)->update([
                 'http_status' => 200,
                 'success' => 1,
                 'code' => 200,
@@ -60,7 +66,7 @@ class TaskSyncService
 
             return ['status' => $status, 'result' => $result];
         } catch (MolizhishuApiException $e) {
-            Db::name('compensation_events')->where('id', $eventId)->update([
+            Db::name('geo_compensation_events')->where('id', $eventId)->update([
                 'http_status' => $e->httpStatus,
                 'success' => 0,
                 'code' => $e->businessCode,
@@ -72,6 +78,11 @@ class TaskSyncService
         }
     }
 
+    /**
+     * Synchronize a bounded batch of unfinished or incomplete local tasks.
+     *
+     * This method is shared by manual compensation and the CLI worker loop.
+     */
     public function syncUnfinished(int $limit = 20, string $source = 'background-compensation'): array
     {
         $taskIds = $this->tasks->unfinishedTaskIds($limit);

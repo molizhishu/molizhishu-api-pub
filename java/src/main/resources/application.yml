@@ -1,0 +1,24 @@
+server:
+  port: ${SERVER_PORT:18081}
+
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://127.0.0.1:3306/molizhishu?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+molizhishu:
+  token: ${MOLIZHISHU_TOKEN:}
+  base-url: ${MOLIZHISHU_BASE_URL:https://business-api.molizhishu.com/api/business/monitor}
+  city-url: ${MOLIZHISHU_CITY_URL:https://business-api.molizhishu.com/api/business/eip-edge/ports/city-info}
+  callback-url: ${MOLIZHISHU_CALLBACK_URL:}
+  timeout-seconds: ${MOLIZHISHU_TIMEOUT_SECONDS:30}
+  allow-api-key-update: ${MOLIZHISHU_ALLOW_API_KEY_UPDATE:true}
+  sync-enabled: ${MOLIZHISHU_SYNC_ENABLED:true}
+  sync-interval-seconds: ${MOLIZHISHU_SYNC_INTERVAL_SECONDS:60}
+  sync-limit: ${MOLIZHISHU_SYNC_LIMIT:20}

@@ -3,10 +3,18 @@ declare(strict_types=1);
 
 namespace app\service;
 
+use app\support\JsonPayload;
 use think\facade\Db;
 
 class TaskRepository
 {
+    public function __construct(private readonly SubtaskRepository $subtasks)
+    {
+    }
+
+    /**
+     * Saves the local task snapshot returned by task submission.
+     */
     public function saveSubmittedTask(array $request, array $response): void
     {
         $taskId = (string) $response['taskId'];
@@ -14,50 +22,53 @@ class TaskRepository
         $task = [
             'task_id' => $taskId,
             'status' => (string) ($response['status'] ?? 'pending'),
-            'prompts_json' => $this->json($request['prompts'] ?? []),
-            'platforms_json' => $this->json($request['platforms'] ?? []),
-            'region_code_json' => $this->json($request['regionCode'] ?? []),
+            'prompts_json' => JsonPayload::encode($request['prompts'] ?? []),
+            'platforms_json' => JsonPayload::encode($request['platforms'] ?? []),
+            'region_code_json' => JsonPayload::encode($request['regionCode'] ?? []),
             'callback_url' => $response['callbackUrl'] ?? ($request['callbackUrl'] ?? null),
             'total_items' => (int) ($response['totalTask'] ?? $response['totalItems'] ?? 0),
             'completed_items' => 0,
             'failed_items' => 0,
             'poll_url' => $response['pollUrl'] ?? null,
-            'raw_request_json' => $this->json($request),
-            'raw_response_json' => $this->json($response),
+            'raw_request_json' => JsonPayload::encode($request),
+            'raw_response_json' => JsonPayload::encode($response),
             'last_error' => null,
             'created_local_at' => $now,
             'updated_at' => $now,
         ];
 
         Db::transaction(function () use ($taskId, $task, $response, $now): void {
-            if (Db::name('tasks')->where('task_id', $taskId)->find()) {
+            if (Db::name('geo_tasks')->where('task_id', $taskId)->find()) {
                 unset($task['created_local_at']);
-                Db::name('tasks')->where('task_id', $taskId)->update($task);
+                Db::name('geo_tasks')->where('task_id', $taskId)->update($task);
             } else {
-                Db::name('tasks')->insert($task);
+                Db::name('geo_tasks')->insert($task);
             }
 
             foreach (($response['subTaskList'] ?? []) as $subtask) {
-                $this->upsertSubtask($taskId, $subtask, $now);
+                $this->subtasks->upsertFromPayload($taskId, $subtask, $now);
             }
         });
     }
 
+    /**
+     * Applies an idempotent callback payload and returns duplicate/subtask info.
+     */
     public function applyCallbackPayload(array $payload, string $payloadHash): array
     {
         $taskId = (string) $payload['taskId'];
         $now = date('Y-m-d H:i:s');
 
         return Db::transaction(function () use ($payload, $payloadHash, $taskId, $now): array {
-            $existingEvent = Db::name('callback_events')
+            $existingEvent = Db::name('geo_callback_events')
                 ->where('task_id', $taskId)
                 ->where('payload_hash', $payloadHash)
                 ->find();
 
             if ($existingEvent && $existingEvent['process_status'] === 'processed') {
-                Db::name('callback_events')->insert([
+                Db::name('geo_callback_events')->insert([
                     'task_id' => $taskId,
-                    'payload_json' => $this->json($payload),
+                    'payload_json' => JsonPayload::encode($payload),
                     'payload_hash' => $payloadHash,
                     'process_status' => 'duplicate',
                     'error_message' => null,
@@ -67,9 +78,9 @@ class TaskRepository
                 return ['duplicate' => true, 'subtasks' => 0];
             }
 
-            $eventId = Db::name('callback_events')->insertGetId([
+            $eventId = Db::name('geo_callback_events')->insertGetId([
                 'task_id' => $taskId,
-                'payload_json' => $this->json($payload),
+                'payload_json' => JsonPayload::encode($payload),
                 'payload_hash' => $payloadHash,
                 'process_status' => 'processing',
                 'error_message' => null,
@@ -83,34 +94,34 @@ class TaskRepository
                 'total_items' => (int) ($payload['totalItems'] ?? 0),
                 'completed_items' => (int) ($payload['completedItems'] ?? 0),
                 'failed_items' => (int) ($payload['failedItems'] ?? 0),
-                'completed_at' => $this->remoteTime($payload['timestamp'] ?? null),
-                'raw_response_json' => $this->json($payload),
+                'completed_at' => JsonPayload::remoteTime($payload['timestamp'] ?? null),
+                'raw_response_json' => JsonPayload::encode($payload),
                 'last_error' => null,
                 'updated_at' => $now,
             ];
 
-            if (Db::name('tasks')->where('task_id', $taskId)->find()) {
-                Db::name('tasks')->where('task_id', $taskId)->update($task);
+            if (Db::name('geo_tasks')->where('task_id', $taskId)->find()) {
+                Db::name('geo_tasks')->where('task_id', $taskId)->update($task);
             } else {
                 $task += [
-                    'prompts_json' => $this->json([]),
-                    'platforms_json' => $this->json([]),
-                    'region_code_json' => $this->json([]),
+                    'prompts_json' => JsonPayload::encode([]),
+                    'platforms_json' => JsonPayload::encode([]),
+                    'region_code_json' => JsonPayload::encode([]),
                     'callback_url' => null,
                     'poll_url' => null,
-                    'raw_request_json' => $this->json([]),
+                    'raw_request_json' => JsonPayload::encode([]),
                     'created_local_at' => $now,
                 ];
-                Db::name('tasks')->insert($task);
+                Db::name('geo_tasks')->insert($task);
             }
 
             $count = 0;
             foreach (($payload['subTaskList'] ?? []) as $subtask) {
-                $this->upsertSubtask($taskId, $subtask, $now);
+                $this->subtasks->upsertFromPayload($taskId, $subtask, $now);
                 $count++;
             }
 
-            Db::name('callback_events')->where('id', $eventId)->update([
+            Db::name('geo_callback_events')->where('id', $eventId)->update([
                 'process_status' => 'processed',
                 'processed_at' => $now,
             ]);
@@ -119,6 +130,9 @@ class TaskRepository
         });
     }
 
+    /**
+     * Applies a remote status response. This may only contain summary subtasks.
+     */
     public function applyRemoteStatus(string $taskId, array $status): void
     {
         $now = date('Y-m-d H:i:s');
@@ -128,31 +142,34 @@ class TaskRepository
             'total_items' => (int) ($status['totalItems'] ?? $status['totalTask'] ?? 0),
             'completed_items' => (int) ($status['completedItems'] ?? 0),
             'failed_items' => (int) ($status['failedItems'] ?? 0),
-            'raw_response_json' => $this->json($status),
+            'raw_response_json' => JsonPayload::encode($status),
             'updated_at' => $now,
         ];
 
         Db::transaction(function () use ($taskId, $status, $data, $now): void {
-            if (Db::name('tasks')->where('task_id', $taskId)->find()) {
-                Db::name('tasks')->where('task_id', $taskId)->update($data);
+            if (Db::name('geo_tasks')->where('task_id', $taskId)->find()) {
+                Db::name('geo_tasks')->where('task_id', $taskId)->update($data);
             } else {
-                Db::name('tasks')->insert($data + [
-                    'prompts_json' => $this->json([]),
-                    'platforms_json' => $this->json([]),
-                    'region_code_json' => $this->json([]),
+                Db::name('geo_tasks')->insert($data + [
+                    'prompts_json' => JsonPayload::encode([]),
+                    'platforms_json' => JsonPayload::encode([]),
+                    'region_code_json' => JsonPayload::encode([]),
                     'callback_url' => null,
                     'poll_url' => null,
-                    'raw_request_json' => $this->json([]),
+                    'raw_request_json' => JsonPayload::encode([]),
                     'created_local_at' => $now,
                 ]);
             }
 
             foreach (($status['subTaskList'] ?? []) as $subtask) {
-                $this->upsertSubtask($taskId, $subtask, $now);
+                $this->subtasks->upsertFromPayload($taskId, $subtask, $now);
             }
         });
     }
 
+    /**
+     * Applies a remote result response with complete answer fields when present.
+     */
     public function applyRemoteResult(string $taskId, array $result): void
     {
         $payload = $result;
@@ -167,32 +184,35 @@ class TaskRepository
                 'total_items' => (int) ($payload['totalItems'] ?? 0),
                 'completed_items' => (int) ($payload['completedItems'] ?? 0),
                 'failed_items' => (int) ($payload['failedItems'] ?? 0),
-                'completed_at' => $this->remoteTime($payload['completedAt'] ?? $payload['timestamp'] ?? null),
-                'raw_response_json' => $this->json($payload),
+                'completed_at' => JsonPayload::remoteTime($payload['completedAt'] ?? $payload['timestamp'] ?? null),
+                'raw_response_json' => JsonPayload::encode($payload),
                 'last_error' => null,
                 'updated_at' => $now,
             ];
 
-            if (Db::name('tasks')->where('task_id', $taskId)->find()) {
-                Db::name('tasks')->where('task_id', $taskId)->update($task);
+            if (Db::name('geo_tasks')->where('task_id', $taskId)->find()) {
+                Db::name('geo_tasks')->where('task_id', $taskId)->update($task);
             } else {
-                Db::name('tasks')->insert($task + [
-                    'prompts_json' => $this->json([]),
-                    'platforms_json' => $this->json([]),
-                    'region_code_json' => $this->json([]),
+                Db::name('geo_tasks')->insert($task + [
+                    'prompts_json' => JsonPayload::encode([]),
+                    'platforms_json' => JsonPayload::encode([]),
+                    'region_code_json' => JsonPayload::encode([]),
                     'callback_url' => null,
                     'poll_url' => null,
-                    'raw_request_json' => $this->json([]),
+                    'raw_request_json' => JsonPayload::encode([]),
                     'created_local_at' => $now,
                 ]);
             }
 
             foreach (($payload['subTaskList'] ?? []) as $subtask) {
-                $this->upsertSubtask($taskId, $subtask, $now);
+                $this->subtasks->upsertFromPayload($taskId, $subtask, $now);
             }
         });
     }
 
+    /**
+     * Returns task IDs that still need compensation polling.
+     */
     public function unfinishedTaskIds(int $limit = 20): array
     {
         $limit = max(1, $limit);
@@ -200,8 +220,8 @@ class TaskRepository
 
         return array_column(Db::query(
             "SELECT t.task_id
-             FROM tasks t
-             LEFT JOIN subtasks s ON s.task_id = t.task_id
+             FROM geo_tasks t
+             LEFT JOIN geo_subtasks s ON s.task_id = t.task_id
              WHERE t.status NOT IN ({$terminal})
                 OR s.subtask_id IS NULL
                 OR s.status IS NULL
@@ -217,9 +237,12 @@ class TaskRepository
         ), 'task_id');
     }
 
+    /**
+     * Returns a local task page for the frontend without calling remote APIs.
+     */
     public function paginateTasks(int $page, int $size, ?string $status): array
     {
-        $query = Db::name('tasks')->order('created_local_at', 'desc');
+        $query = Db::name('geo_tasks')->order('created_local_at', 'desc');
         if ($status) {
             $query->where('status', $status);
         }
@@ -229,109 +252,18 @@ class TaskRepository
         return ['page' => $page, 'size' => $size, 'total' => $total, 'items' => $items];
     }
 
+    /**
+     * Returns one local task with subtasks and recent callback events.
+     */
     public function getTaskDetail(string $taskId): ?array
     {
-        $task = Db::name('tasks')->where('task_id', $taskId)->find();
+        $task = Db::name('geo_tasks')->where('task_id', $taskId)->find();
         if (!$task) {
             return null;
         }
 
-        $task['subTaskList'] = Db::name('subtasks')->where('task_id', $taskId)->order('updated_at', 'desc')->select()->toArray();
-        $task['callbackEvents'] = Db::name('callback_events')->where('task_id', $taskId)->order('received_at', 'desc')->limit(20)->select()->toArray();
+        $task['subTaskList'] = Db::name('geo_subtasks')->where('task_id', $taskId)->order('updated_at', 'desc')->select()->toArray();
+        $task['callbackEvents'] = Db::name('geo_callback_events')->where('task_id', $taskId)->order('received_at', 'desc')->limit(20)->select()->toArray();
         return $task;
-    }
-
-    private function upsertSubtask(string $taskId, array $subtask, string $now): void
-    {
-        $subTaskId = (string) ($subtask['subTaskId'] ?? '');
-        if ($subTaskId === '') {
-            return;
-        }
-
-        $existing = Db::name('subtasks')->where('subtask_id', $subTaskId)->find();
-        $data = [
-            'subtask_id' => $subTaskId,
-            'task_id' => $taskId,
-            'platform' => $subtask['platform'] ?? null,
-            'mode' => $subtask['mode'] ?? null,
-            'prompt' => $subtask['prompt'] ?? null,
-            'status' => $subtask['status'] ?? null,
-            'updated_at' => $now,
-        ];
-
-        if (!$existing || array_key_exists('time', $subtask)) {
-            $data['time'] = isset($subtask['time']) ? (string) $subtask['time'] : null;
-        }
-        if (!$existing || array_key_exists('pageScreenshot', $subtask)) {
-            $data['page_screenshot'] = $subtask['pageScreenshot'] ?? null;
-        }
-        if (!$existing || array_key_exists('answerContent', $subtask)) {
-            $data['answer_content'] = $subtask['answerContent'] ?? null;
-        }
-        if (!$existing || array_key_exists('referenceList', $subtask)) {
-            $data['reference_list_json'] = $this->json($subtask['referenceList'] ?? []);
-        }
-        if (!$existing || array_key_exists('citationList', $subtask)) {
-            $data['citation_list_json'] = $this->json($subtask['citationList'] ?? []);
-        }
-        if (!$existing || array_key_exists('reasoningProcess', $subtask)) {
-            $data['reasoning_process_json'] = $this->json($subtask['reasoningProcess'] ?? null);
-        }
-        if (!$existing || array_key_exists('recommendedQuestions', $subtask)) {
-            $data['recommended_questions_json'] = $this->json($subtask['recommendedQuestions'] ?? []);
-        }
-        if (!$existing || array_key_exists('mediaContent', $subtask)) {
-            $data['media_content_json'] = $this->json($subtask['mediaContent'] ?? []);
-        }
-        if (!$existing || array_key_exists('errorMessage', $subtask)) {
-            $data['error_message'] = $subtask['errorMessage'] ?? null;
-        }
-        if (!$existing || array_key_exists('proxyIp', $subtask)) {
-            $data['proxy_ip'] = $subtask['proxyIp'] ?? null;
-        }
-        if (!$existing || $this->hasRichSubtaskPayload($subtask)) {
-            $data['raw_result_json'] = $this->json($subtask);
-        }
-
-        if ($existing) {
-            Db::name('subtasks')->where('subtask_id', $subTaskId)->update($data);
-        } else {
-            Db::name('subtasks')->insert($data);
-        }
-    }
-
-    private function hasRichSubtaskPayload(array $subtask): bool
-    {
-        foreach ([
-            'time',
-            'pageScreenshot',
-            'answerContent',
-            'referenceList',
-            'citationList',
-            'reasoningProcess',
-            'recommendedQuestions',
-            'mediaContent',
-            'errorMessage',
-            'proxyIp',
-        ] as $key) {
-            if (array_key_exists($key, $subtask)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private function remoteTime(mixed $timestamp): ?string
-    {
-        if (!$timestamp) {
-            return null;
-        }
-
-        return date('Y-m-d H:i:s', (int) floor(((int) $timestamp) / 1000));
-    }
-
-    private function json(mixed $value): string
-    {
-        return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }

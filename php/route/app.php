@@ -3,6 +3,7 @@
 use think\facade\Route;
 
 Route::post('api/auth/login', 'AuthController/login');
+Route::get('api/health', 'HealthController/index');
 
 Route::post('webhooks/molizhishu', 'CallbackController/receive');
 

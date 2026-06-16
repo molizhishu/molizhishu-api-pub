@@ -1,0 +1,95 @@
+version: "2.4"
+
+services:
+  web-build:
+    image: node:20-alpine
+    container_name: molizhishu-api-pub-rust-web-build
+    working_dir: /tmp
+    restart: unless-stopped
+    command: sh -c "rm -f /app/frontend-dist/.molizhishu-built && rm -rf /tmp/frontend-build && mkdir -p /tmp/frontend-build && tar -C /app/frontend-src --exclude=node_modules --exclude=dist -cf - . | tar -C /tmp/frontend-build -xf - && cd /tmp/frontend-build && npm ci && npm run build && rm -rf /app/frontend-dist/* && cp -a dist/. /app/frontend-dist/ && touch /app/frontend-dist/.molizhishu-built && tail -f /dev/null"
+    environment:
+      TZ: "${TZ:-Asia/Shanghai}"
+    volumes:
+      - ../frontend:/app/frontend-src:ro
+      - rust_web_dist:/app/frontend-dist
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: molizhishu-api-pub-rust-web
+    restart: unless-stopped
+    command: sh -c "until [ -f /usr/share/nginx/html/.molizhishu-built ]; do sleep 1; done; envsubst '$$API_UPSTREAM' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    ports:
+      - "${WEB_PORT:-18000}:18000"
+    environment:
+      TZ: "${TZ:-Asia/Shanghai}"
+      API_UPSTREAM: "rust:18085"
+    volumes:
+      - rust_web_dist:/usr/share/nginx/html:ro
+      - ../frontend/docker/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      web-build:
+        condition: service_started
+      rust:
+        condition: service_started
+
+  rust:
+    image: rust:1.91
+    container_name: molizhishu-api-pub-rust
+    restart: unless-stopped
+    working_dir: /app
+    command: cargo run --release
+    ports:
+      - "${API_PORT:-18085}:18085"
+    environment:
+      APP_PORT: 18085
+      TZ: "${TZ:-Asia/Shanghai}"
+      DATABASE_URL: "mysql://${MYSQL_USER:-molizhishu}:${MYSQL_PASSWORD:-molizhishu_password}@db:3306/${MYSQL_DATABASE:-molizhishu}"
+      MOLIZHISHU_BASE_URL: "${MOLIZHISHU_BASE_URL:-https://business-api.molizhishu.com/api/business/monitor}"
+      MOLIZHISHU_CITY_URL: "${MOLIZHISHU_CITY_URL:-https://business-api.molizhishu.com/api/business/eip-edge/ports/city-info}"
+      MOLIZHISHU_TOKEN: "${MOLIZHISHU_TOKEN:-}"
+      MOLIZHISHU_CALLBACK_URL: "${MOLIZHISHU_CALLBACK_URL:-}"
+      MOLIZHISHU_ALLOW_API_KEY_UPDATE: "${MOLIZHISHU_ALLOW_API_KEY_UPDATE:-false}"
+      MOLIZHISHU_TIMEOUT_SECONDS: "${MOLIZHISHU_TIMEOUT_SECONDS:-30}"
+      MOLIZHISHU_SYNC_ENABLED: "${MOLIZHISHU_SYNC_ENABLED:-true}"
+      MOLIZHISHU_SYNC_INTERVAL_SECONDS: "${MOLIZHISHU_SYNC_INTERVAL_SECONDS:-60}"
+      MOLIZHISHU_SYNC_LIMIT: "${MOLIZHISHU_SYNC_LIMIT:-20}"
+    volumes:
+      - .:/app
+      - rust_registry:/usr/local/cargo/registry
+      - rust_git:/usr/local/cargo/git
+      - rust_target:/app/target
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    container_name: molizhishu-api-pub-rust-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root_password}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-molizhishu}"
+      MYSQL_USER: "${MYSQL_USER:-molizhishu}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-molizhishu_password}"
+      TZ: "${TZ:-Asia/Shanghai}"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=${MYSQL_TIME_ZONE:-+08:00}
+      - --init-connect=SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci
+    volumes:
+      - rust_mysql:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  rust_web_dist:
+  rust_mysql:
+  rust_registry:
+  rust_git:
+  rust_target:

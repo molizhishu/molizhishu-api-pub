@@ -33,6 +33,7 @@ import { api, TaskSummary } from '../api';
 import { StatusBadge } from '../ui/StatusBadge';
 import { AppSelect } from '../ui/AppSelect';
 import { modeLabel, parseJsonArray, platformIcon, platformLabel } from '../molizhishuOptions';
+import { formatDateTime, parseDateTime } from '../time';
 
 type MetricTone = 'green' | 'blue' | 'orange' | 'red' | 'slate' | 'yellow';
 
@@ -105,10 +106,7 @@ function getTaskPlatforms(task: TaskSummary) {
 }
 
 function parseLocalDate(value?: string | null): Date | null {
-  if (!value) return null;
-  const normalized = value.includes('T') ? value : value.replace(' ', 'T');
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? null : date;
+  return parseDateTime(value);
 }
 
 function dateKey(date: Date): string {
@@ -117,9 +115,27 @@ function dateKey(date: Date): string {
   return `${month}-${day}`;
 }
 
-function lastSevenDays() {
+function dateInputValue(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function parseDateInput(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, (month || 1) - 1, day || 1);
+  date.setHours(0, 0, 0, 0);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function taskDateInputValue(task: TaskSummary): string {
+  const date = parseLocalDate(task.created_local_at) || parseLocalDate(task.updated_at);
+  return date ? dateInputValue(date) : '';
+}
+
+function lastSevenDays(baseDate = new Date()) {
   return Array.from({ length: 7 }).map((_, index) => {
-    const date = new Date();
+    const date = new Date(baseDate);
     date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() - (6 - index));
     return dateKey(date);
@@ -129,6 +145,14 @@ function lastSevenDays() {
 function distribute(value: number, count: number): number {
   if (count <= 0) return 0;
   return Math.max(0, Math.round(value / count));
+}
+
+function taskTotalItems(task: TaskSummary): number {
+  return Number(task.total_items || 0);
+}
+
+function taskRemainingItems(task: TaskSummary): number {
+  return Math.max(0, taskTotalItems(task) - Number(task.completed_items || 0) - Number(task.failed_items || 0));
 }
 
 function statusText(status: string): string {
@@ -238,35 +262,54 @@ function PlatformTrendLegend({ payload }: { payload?: Array<{ value?: string; co
 
 export function DashboardPage() {
   const [selectedPlatform, setSelectedPlatform] = useState('all');
+  const [selectedDate, setSelectedDate] = useState(() => dateInputValue(new Date()));
+  const [updatedAt, setUpdatedAt] = useState(() => new Date());
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['dashboard-tasks'],
-    queryFn: () => api.listTasks({ page: 1, size: 100 }),
+    queryFn: () => api.listTasks({ page: 1, size: 1000 }),
     refetchInterval: 15000
   });
 
   const items = data?.items ?? [];
 
+  useEffect(() => {
+    if (data) setUpdatedAt(new Date());
+  }, [data]);
+
   const dashboard = useMemo(() => {
-    const totalTasks = data?.total ?? items.length;
-    const sampleTasks = items.length;
-    const completedTasks = items.filter((item) => item.status === 'completed').length;
-    const failedTasks = items.filter((item) => item.status === 'failed').length;
-    const runningTasks = items.filter((item) => item.status === 'processing').length;
-    const partialTasks = items.filter((item) => item.status === 'partial_completed').length;
-    const pendingTasks = items.filter((item) => item.status === 'pending').length;
-    const stoppedTasks = items.filter((item) => item.status === 'stopped').length;
-    const totalItems = items.reduce((sum, item) => sum + Number(item.total_items || 0), 0);
-    const completedItems = items.reduce((sum, item) => sum + Number(item.completed_items || 0), 0);
-    const failedItems = items.reduce((sum, item) => sum + Number(item.failed_items || 0), 0);
-    const pendingItems = Math.max(0, totalItems - completedItems - failedItems);
+    const selectedDateValue = dateInputValue(parseDateInput(selectedDate));
+    const scopedItems = items.filter((item) => taskDateInputValue(item) === selectedDateValue);
+    const totalItems = scopedItems.reduce((sum, item) => sum + taskTotalItems(item), 0);
+    const completedItems = scopedItems.reduce((sum, item) => sum + Number(item.completed_items || 0), 0);
+    const failedItems = scopedItems.reduce((sum, item) => sum + Number(item.failed_items || 0), 0);
+    const pendingItems = scopedItems
+      .filter((item) => item.status === 'pending')
+      .reduce((sum, item) => sum + taskRemainingItems(item), 0);
+    const runningItems = scopedItems
+      .filter((item) => item.status === 'processing')
+      .reduce((sum, item) => sum + taskRemainingItems(item), 0);
+    const partialItems = scopedItems
+      .filter((item) => item.status === 'partial_completed')
+      .reduce((sum, item) => sum + taskTotalItems(item), 0);
+    const stoppedItems = scopedItems
+      .filter((item) => item.status === 'stopped')
+      .reduce((sum, item) => sum + taskRemainingItems(item), 0);
+    const totalTasks = totalItems;
+    const sampleTasks = scopedItems.length;
+    const completedTasks = completedItems;
+    const failedTasks = failedItems;
+    const runningTasks = runningItems;
+    const partialTasks = partialItems;
+    const pendingTasks = pendingItems;
+    const stoppedTasks = stoppedItems;
     const completionRate = percent(completedItems, totalItems);
-    const days = lastSevenDays();
+    const days = lastSevenDays(parseDateInput(selectedDate));
 
     const platformMap = new Map<string, PlatformStat>();
     const dayMap = new Map(days.map((day) => [day, { day, completed: 0, pending: 0, failed: 0 }]));
     const hourMap = new Map(Array.from({ length: 24 }).map((_, hour) => [hour, { hour, completed: 0, created: 0 }]));
 
-    items.forEach((task) => {
+    scopedItems.forEach((task) => {
       const platforms = getTaskPlatforms(task);
       const prompts = getTaskPrompts(task);
       const platformCount = Math.max(platforms.length, 1);
@@ -299,17 +342,6 @@ export function DashboardPage() {
         platformMap.set(item.platform, current);
       });
 
-      const updated = parseLocalDate(task.updated_at) || parseLocalDate(task.created_local_at);
-      if (updated) {
-        const key = dateKey(updated);
-        const day = dayMap.get(key);
-        if (day) {
-          day.completed += Number(task.completed_items || 0);
-          day.pending += Math.max(0, Number(task.total_items || 0) - Number(task.completed_items || 0) - Number(task.failed_items || 0));
-          day.failed += Number(task.failed_items || 0);
-        }
-      }
-
       const created = parseLocalDate(task.created_local_at);
       if (created) {
         const hour = hourMap.get(created.getHours());
@@ -318,6 +350,17 @@ export function DashboardPage() {
           hour.completed += Number(task.completed_items || 0);
         }
       }
+    });
+
+    items.forEach((task) => {
+      const updated = parseLocalDate(task.updated_at) || parseLocalDate(task.created_local_at);
+      if (!updated) return;
+      const key = dateKey(updated);
+      const day = dayMap.get(key);
+      if (!day) return;
+      day.completed += Number(task.completed_items || 0);
+      day.pending += Math.max(0, Number(task.total_items || 0) - Number(task.completed_items || 0) - Number(task.failed_items || 0));
+      day.failed += Number(task.failed_items || 0);
     });
 
     const platforms = Array.from(platformMap.values())
@@ -354,19 +397,20 @@ export function DashboardPage() {
       failedItems,
       pendingItems,
       completionRate,
+      selectedDate: selectedDateValue,
       platforms,
       dayStats: Array.from(dayMap.values()),
       hourStats: Array.from(hourMap.values()),
       platformTrend,
-      pressureTasks: [...items]
+      pressureTasks: [...scopedItems]
         .filter((task) => UNFINISHED_STATUSES.includes(task.status))
         .sort((a, b) => (b.total_items - b.completed_items - b.failed_items) - (a.total_items - a.completed_items - a.failed_items))
         .slice(0, 10),
-      recentTasks: [...items]
+      recentTasks: [...scopedItems]
         .sort((a, b) => (parseLocalDate(b.updated_at)?.getTime() || 0) - (parseLocalDate(a.updated_at)?.getTime() || 0))
         .slice(0, 10)
     };
-  }, [data?.total, items, selectedPlatform]);
+  }, [items, selectedDate, selectedPlatform]);
 
   const metrics: DashboardMetric[] = [
     { label: '总任务', value: compactNumber(dashboard.totalTasks), tone: 'blue', icon: Clock3 },
@@ -394,11 +438,16 @@ export function DashboardPage() {
           <h1>控制台</h1>
         </div>
         <div className="opsActions">
-          <span className="opsUpdated">更新于 {new Date().toLocaleTimeString('zh-CN', { hour12: false })}<i /></span>
-          <div className="opsDate">
+          <span className="opsUpdated">更新于 {updatedAt.toLocaleTimeString('zh-CN', { hour12: false })}<i /></span>
+          <label className="opsDate" title="选择统计日期">
             <CalendarDays size={16} />
-            {new Date().toLocaleDateString('zh-CN')}
-          </div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              aria-label="选择统计日期"
+            />
+          </label>
           <button className="outlineButton" type="button" onClick={() => refetch()}>
             <RefreshCw size={16} className={isFetching ? 'spinIcon' : ''} />
             刷新
@@ -560,7 +609,7 @@ export function DashboardPage() {
                           <span className="progressText">{task.completed_items}/{task.total_items}</span>
                           {task.failed_items > 0 && <span className="failText">失败 {task.failed_items}</span>}
                         </td>
-                        <td className="muted">{task.updated_at}</td>
+                        <td className="muted">{formatDateTime(task.updated_at)}</td>
                       </tr>
                     );
                   })}

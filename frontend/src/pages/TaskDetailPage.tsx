@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BrainCircuit, Check, ChevronDown, ChevronRight, Clock3, Copy, ExternalLink, Image as ImageIcon, RefreshCw, RadioTower, X } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, Subtask, TaskDetail } from '../api';
-import { StatusBadge } from '../ui/StatusBadge';
+import { StatusBadge, statusLabel } from '../ui/StatusBadge';
 import { MarkdownContent } from '../ui/MarkdownContent';
 import { AppSelect } from '../ui/AppSelect';
 import { modeLabel, parseJsonArray, platformIcon, platformLabel } from '../molizhishuOptions';
+import { formatDateTime } from '../time';
 
 type ReferenceItem = {
   url: string;
@@ -164,10 +165,7 @@ function subtaskReferences(subtask: Subtask) {
 }
 
 function formatRemoteTime(value?: string | null): string {
-  if (!value) return '-';
-  const timestamp = Number(value);
-  if (!Number.isFinite(timestamp)) return value;
-  return new Date(timestamp).toLocaleString('zh-CN', { hour12: false });
+  return formatDateTime(value);
 }
 
 function callbackInfo(event: TaskDetail['callbackEvents'][number]) {
@@ -546,11 +544,11 @@ export function TaskDetailPage() {
         </div>
         <div>
           <span>创建时间</span>
-          <strong>{data.created_local_at}</strong>
+          <strong>{formatDateTime(data.created_local_at)}</strong>
         </div>
         <div>
           <span>更新时间</span>
-          <strong>{data.updated_at}</strong>
+          <strong>{formatDateTime(data.updated_at)}</strong>
         </div>
       </div>
 
@@ -565,6 +563,7 @@ export function TaskDetailPage() {
             ['all', '全部'],
             ['completed', '已完成'],
             ['processing', '处理中'],
+            ['assigned', '已分配'],
             ['pending', '待处理'],
             ['failed', '失败']
           ].map(([value, label]) => (
@@ -684,10 +683,10 @@ export function TaskDetailPage() {
                 return (
                   <tr key={event.id}>
                     <td>
-                      <span className="timeCell"><Clock3 size={14} />{event.received_at}</span>
+                      <span className="timeCell"><Clock3 size={14} />{formatDateTime(event.received_at)}</span>
                     </td>
                     <td>{event.process_status}</td>
-                    <td>{info.status}</td>
+                    <td>{statusLabel(info.status)}</td>
                     <td>{info.ip}</td>
                     <td>{info.subtaskCount}</td>
                     <td className="hash">{event.payload_hash}</td>

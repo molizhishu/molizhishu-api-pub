@@ -25,14 +25,19 @@
 | 后端 | PHP 8、ThinkPHP 8、think-orm |
 | 前端 | React、TypeScript、Vite、TanStack Query、Recharts |
 | 数据库 | MySQL 8 |
-| 部署 | Docker Compose、Apache、PHP-FPM/Apache 镜像 |
+| 部署 | Docker Compose、Apache、Nginx、官方语言运行时镜像 |
 
 ## 目录结构
 
 ```text
 .
 php/
-├── app/                 # ThinkPHP 应用代码
+├── app/
+│   ├── command/         # 后台补偿同步 CLI 命令
+│   ├── controller/      # HTTP Controller
+│   ├── middleware/      # 管理端鉴权中间件
+│   ├── service/         # 远端 Client、Repository、同步编排和鉴权服务
+│   └── support/         # Callback/JSON payload 等轻量辅助
 ├── config/              # 后端配置
 ├── database/            # MySQL DDL
 ├── docker/              # Apache 和容器入口脚本
@@ -40,8 +45,7 @@ php/
 ├── public/              # Web 入口
 ├── route/               # 路由
 ├── tests/               # 单元测试
-├── docker-compose.yml
-└── Dockerfile
+└── docker-compose.yml
 ```
 
 ## 快速开始
@@ -64,7 +68,7 @@ MOLIZHISHU_ALLOW_API_KEY_UPDATE=true
 DATABASE_HOST=127.0.0.1
 DATABASE_NAME=molizhishu
 DATABASE_USER=root
-DATABASE_PASSWORD=
+DATABASE_PASSWORD=your_mysql_password
 DATABASE_PORT=3306
 ```
 
@@ -85,7 +89,7 @@ php think run -p 8000
 
 ```bash
 (cd ../frontend && npm install)
-(cd ../frontend && npm run dev)
+(cd ../frontend && VITE_API_TARGET=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1)
 ```
 
 访问：
@@ -118,6 +122,8 @@ MOLIZHISHU_TOKEN=你的模力指数 API Key
 MOLIZHISHU_ALLOW_API_KEY_UPDATE=true
 MYSQL_ROOT_PASSWORD=安全的 root 密码
 MYSQL_PASSWORD=安全的应用数据库密码
+TZ=Asia/Shanghai
+MYSQL_TIME_ZONE=+08:00
 ```
 
 启动：
@@ -129,17 +135,14 @@ sh scripts/docker-up.sh
 如果你的 Docker 环境支持 Compose v2，也可以直接运行：
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 `scripts/docker-up.sh` 会自动读取 `docker.env`，并兼容不支持 `docker compose --env-file` 的老版本 Docker。
 
-如果服务器构建时 Composer 下载依赖遇到 GitHub `504`，可以直接重试 `sh scripts/docker-up.sh`。Dockerfile 默认使用 Composer 镜像源并内置重试；如需切换镜像源：
+当前部署方案不再维护 Dockerfile，Compose 会直接拉取官方镜像。首次启动时会在容器内安装 PHP 扩展和 Composer 依赖，因此第一次启动会比预构建镜像慢一些。
 
-```bash
-docker compose build --build-arg COMPOSER_REPO_PACKAGIST=https://repo.packagist.org web php worker
-docker compose up -d
-```
+如果服务器安装依赖时遇到网络波动，可以直接重试 `sh scripts/docker-up.sh`；如需切换 Composer 镜像源，可在 `docker.env` 中修改：
 
 默认 Composer 源为：
 
@@ -154,18 +157,28 @@ COMPOSER_REPO_PACKAGIST=https://mirrors.aliyun.com/composer/
 API：http://127.0.0.1:18080
 ```
 
+Docker Compose 会同时启动前端容器、PHP API、后台同步 worker 和 MySQL。前端容器会构建根目录公共前端，并把 `/api/*`、`/webhooks/*` 反向代理到 PHP API。
+
 Docker 默认镜像和容器命名：
 
 | 服务 | 镜像 | 容器 | 端口 |
 | :--- | :--- | :--- | :--- |
-| 前端 | `molizhishu-api-pub-web` | `molizhishu-api-pub-web` | `${WEB_PORT:-18000}:18000` |
-| PHP API | `molizhishu-api-pub-php` | `molizhishu-api-pub-php` | `${API_PORT:-18080}:18080` |
-| 同步进程 | `molizhishu-api-pub-worker` | `molizhishu-api-pub-worker` | 不暴露端口 |
+| 前端构建 | `node:20-alpine` | `molizhishu-api-pub-php-web-build` | 不暴露端口 |
+| 前端 Web | `nginx:1.27-alpine` | `molizhishu-api-pub-php-web` | `${WEB_PORT:-18000}:18000` |
+| PHP API | `php:8.2-apache` | `molizhishu-api-pub-php` | `${API_PORT:-18080}:18080` |
+| 同步进程 | `php:8.2-cli` | `molizhishu-api-pub-worker` | 不暴露端口 |
 | MySQL | `mysql:8.4` | `molizhishu-api-pub-db` | 不暴露端口 |
+
+数据库表统一使用 `geo_` 前缀，例如 `geo_tasks`、`geo_subtasks`、`geo_callback_events`、`geo_admin_users`。
+
+Docker 默认使用 `TZ=Asia/Shanghai`，MySQL 使用 `MYSQL_TIME_ZONE=+08:00`。本地 `DATETIME` 字段按东八区保存，避免任务创建时间和远端毫秒级执行时间显示相差 8 小时。
+
+如果你已经用旧版本 Docker 启动过 MySQL，已有 volume 不会自动重新执行 `database/schema.sql`。测试环境可删除旧 volume 后重建；生产环境请先备份数据，再按业务需要迁移旧表到 `geo_` 前缀表。
 
 容器职责说明：
 
-- `molizhishu-api-pub-web`：只负责前端静态页面和反向代理，默认监听 `18000`。浏览器访问这个容器即可使用控制台。
+- `molizhishu-api-pub-php-web-build`：负责用 Node 构建根目录公共前端，构建产物写入 Docker volume。
+- `molizhishu-api-pub-php-web`：负责前端静态页面访问，并把 `/api/*`、`/webhooks/*` 反向代理到 PHP API，默认监听 `18000`。
 - `molizhishu-api-pub-php`：负责 PHP API、Callback 接收和设置保存，默认监听 `18080`。
 - `molizhishu-api-pub-worker`：负责后台补偿同步，把未完成或部分完成的远端任务定期拉回本地数据库。它不是 API 服务，不接收浏览器请求，因此不暴露端口。
 - `molizhishu-api-pub-db`：MySQL 数据库，只在 Compose 内部网络中供 PHP API 和 worker 访问。
@@ -219,7 +232,18 @@ Authorization: Bearer <token>
 | `PUT` | `/api/callback-url` | 设置或清空全局 Callback |
 | `GET` | `/api/cities` | 获取可用区域 |
 | `GET` | `/api/settings` | 查询系统设置 |
-| `PUT` | `/api/settings/api-key` | 更新 API Key，默认生产禁用 |
+| `PUT` | `/api/settings/api-key` | 更新 API Key，默认允许，可通过环境变量关闭 |
+
+## 与公共前端保持一致
+
+本 demo 复用根目录 `frontend/`，因此本地 API 字段和行为必须与其它语言保持一致。修改以下内容时需要同步检查所有语言：
+
+- `/api/tasks` 和 `/api/tasks/{taskId}` 的响应字段名和字段类型。
+- `prompts_json`、`platforms_json`、`region_code_json` 必须返回 JSON 字符串。
+- 后台同步不能把提交参数覆盖成空数组。
+- 控制台统计口径是子任务数，不是主任务条数。
+
+完整契约见 [../docs/implementation-contract.md](../docs/implementation-contract.md)。
 
 ## 后台补偿同步
 
