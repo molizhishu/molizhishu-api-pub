@@ -92,22 +92,22 @@ sidebar_position: 2
 
 | platform | 平台名称 | 平台描述 |
 | -------- | -------- | -------- |
-| <img src="./images/svg/deepseek-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`deepseek` | DeepSeek | 领先的国产自研大模型，性能强劲。 |
-| <img src="./images/svg/doubao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`doubao` | 豆包 | 字节跳动旗下的智能 AI 助手。 |
-| <img src="./images/svg/yuanbao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`yuanbao` | 元宝 | 腾讯出品的 AI 助手，连接微信生态。 |
-| <img src="./images/svg/kimi-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`kimi` | Kimi | 月之暗面出品，支持长文本处理。 |
-| <img src="./images/svg/qwen-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`qianwen` | 通义千问 | 阿里巴巴自研大模型，功能全面。 |
-| <img src="./images/svg/quark-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`quark` | 夸克 | 夸克浏览器内置 AI，主打搜索与学习。 |
-| <img src="./images/svg/baidu-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`baiduai` | 百度文心 | 百度智能搜索，不支持深度思考。 |
-| <img src="./images/svg/weibo-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`weibo_zhisou` | 微博智搜 | 微博推出的 AI 搜索。 |
-| <img src="./images/svg/antafu-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`antafu` | 蚂蚁阿福 | 蚂蚁集团旗下 AI 健康助手。 |
-| <img src="./images/svg/douyinai-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`douyinai` | 抖音AI | 抖音AI搜索。 |
-| <img src="./images/svg/openai-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`chatgpt` | ChatGPT | OpenAI 聊天模型。 |
-| <img src="./images/svg/doubao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`doubao_mobile` | 豆包移动版 | 豆包移动端正在升级维护，暂时无法提交任务。 |
-| <img src="./images/svg/deepseek-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`deepseek_mobile` | DeepSeek 移动端 | DeepSeek 移动端版本。 |
-| <img src="./images/svg/qwen-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`qianwen_mobile` | 通义千问移动端 | 通义千问移动端版本。 |
-| <img src="./images/svg/yuanbao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`yuanbao_mobile` | 元宝移动端 | 元宝的移动端版本。 |
-| <img src="./images/svg/baidu-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`baidu_mobile` | 百度文心移动端 | 百度文心移动端，不支持深度思考。 |
+| <img src="./images/svg/deepseek-color.svg" width="18" height="18" align="middle" />&nbsp;`deepseek` | DeepSeek | 领先的国产自研大模型，性能强劲。 |
+| <img src="./images/svg/doubao-color.svg" width="18" height="18" align="middle" />&nbsp;`doubao` | 豆包 | 字节跳动旗下的智能 AI 助手。 |
+| <img src="./images/svg/yuanbao-color.svg" width="18" height="18" align="middle" />&nbsp;`yuanbao` | 元宝 | 腾讯出品的 AI 助手，连接微信生态。 |
+| <img src="./images/svg/kimi-color.svg" width="18" height="18" align="middle" />&nbsp;`kimi` | Kimi | 月之暗面出品，支持长文本处理。 |
+| <img src="./images/svg/qwen-color.svg" width="18" height="18" align="middle" />&nbsp;`qianwen` | 通义千问 | 阿里巴巴自研大模型，功能全面。 |
+| <img src="./images/svg/quark-color.svg" width="18" height="18" align="middle" />&nbsp;`quark` | 夸克 | 夸克浏览器内置 AI，主打搜索与学习。 |
+| <img src="./images/svg/baidu-color.svg" width="18" height="18" align="middle" />&nbsp;`baiduai` | 百度文心 | 百度智能搜索，不支持深度思考。 |
+| <img src="./images/svg/weibo-color.svg" width="18" height="18" align="middle" />&nbsp;`weibo_zhisou` | 微博智搜 | 微博推出的 AI 搜索。 |
+| <img src="./images/svg/antafu-color.svg" width="18" height="18" align="middle" />&nbsp;`antafu` | 蚂蚁阿福 | 蚂蚁集团旗下 AI 健康助手。 |
+| <img src="./images/svg/douyinai-color.svg" width="18" height="18" align="middle" />&nbsp;`douyinai` | 抖音AI | 抖音AI搜索。 |
+| <img src="./images/svg/openai-color.svg" width="18" height="18" align="middle" />&nbsp;`chatgpt` | ChatGPT | OpenAI 聊天模型。 |
+| <img src="./images/svg/doubao-color.svg" width="18" height="18" align="middle" />&nbsp;`doubao_mobile` | 豆包移动版 | 豆包移动端正在升级维护，暂时无法提交任务。 |
+| <img src="./images/svg/deepseek-color.svg" width="18" height="18" align="middle" />&nbsp;`deepseek_mobile` | DeepSeek 移动端 | DeepSeek 移动端版本。 |
+| <img src="./images/svg/qwen-color.svg" width="18" height="18" align="middle" />&nbsp;`qianwen_mobile` | 通义千问移动端 | 通义千问移动端版本。 |
+| <img src="./images/svg/yuanbao-color.svg" width="18" height="18" align="middle" />&nbsp;`yuanbao_mobile` | 元宝移动端 | 元宝的移动端版本。 |
+| <img src="./images/svg/baidu-color.svg" width="18" height="18" align="middle" />&nbsp;`baidu_mobile` | 百度文心移动端 | 百度文心移动端，不支持深度思考。 |
 
 ### 参数去重规则
 
