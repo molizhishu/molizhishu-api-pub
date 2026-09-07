@@ -30,6 +30,7 @@ sidebar_position: 3
     "message": "操作成功",
     "data": {
         "taskId": "5a85cdd0ed9249cfb69daaeca2b91a09",
+        "consumerTaskId": "consumerTask202606300001",
         "status": "completed",
         "message": "任务进度: 2/2 已完成, 0 失败",
         "totalItems": 2,
@@ -76,6 +77,7 @@ sidebar_position: 3
 | 字段名 | 类型 | 描述 |
 |--------|------|------|
 | taskId | String | 批量任务ID |
+| consumerTaskId | String | 客户侧任务唯一标识，仅用于提交幂等；提交时未提供则为 `null` |
 | status | String | 任务状态，详见下方状态说明 |
 | message | String | 任务进度描述 |
 | totalItems | Integer | 子任务总数 |

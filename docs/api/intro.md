@@ -16,10 +16,10 @@ sidebar_position: 1
 
 | 能力 | 说明                                                 |
 |------|----------------------------------------------------|
-| 🚀 **多平台支持** | DeepSeek、DeepSeek 移动端、豆包、豆包移动版、元宝、Kimi、通义千问、夸克、百度 AI+、文心一言、微博智搜 |
+| 🚀 **多平台支持** | DeepSeek、DeepSeek 移动端、豆包、豆包移动版（升级维护中）、元宝、元宝移动端、Kimi、通义千问、通义千问移动端、蚂蚁阿福、抖音AI、ChatGPT、夸克、百度文心、百度文心移动端、微博智搜 |
 | 🔍 **多监控模式** | 基础模式、深度思考、联网搜索、深度+联网                               |
 | 📊 **批量任务** | 单次提交最多 50 个 prompt × n 个平台配置（单个主任务限制最多生成 100个子任务）  |
-| 📸 **截图采集** | 三种模式：不截图 / 全量截图 / 提及时截图                            |
+| 📸 **截图采集** | 三种模式：不截图 / 全量截图 / 提及时截图；开启截图时，支持的平台会返回官方对话分享链接（[查看支持平台](./api/overview#商品视频搜索词分享链接支持情况)） |
 | 🔄 **异步 + 回调** | 任务异步执行，支持状态轮询与 Webhook 回调                          |
 | 🌐 **区域** | 指定区域，模拟不同地域访问                                      |
 
@@ -27,8 +27,19 @@ sidebar_position: 1
 
 ### 第 1 步：获取 Token
 
-:::info
-访问 [模力指数控制台](https://business.molizhishu.com) 注册账户，在「API 管理」中获取 Bearer Token。
+1. 访问 [模力指数控制台](https://business.molizhishu.com/)，首次使用时按页面提示完成账户注册并登录；已有账户可直接登录。
+2. 登录后，点击页面右上角的账户头像，在展开的菜单中点击「开通API」。
+
+<img src="./images/open-api-menu.png" alt="账户菜单中的开通API入口" width="551" />
+
+3. 在「开通API」弹窗中，使用微信扫描二维码，添加企业专属客服。
+
+<img src="./images/open-api-contact.jpg" alt="开通API联系客服弹窗" width="423" />
+
+4. 联系客服并说明 API 开通需求。API 服务开通后，客服会提供对应的 Bearer Token。
+
+:::warning
+Bearer Token 是调用 API 的身份凭证，请妥善保管，不要在公开场合或客户端代码中泄露。
 :::
 
 ### 第 2 步：提交监控任务
@@ -79,17 +90,22 @@ curl -X GET "https://business-api.molizhishu.com/api/business/monitor/task/resul
 
 | platform 标识 | 平台名称 | 核心特点 |
 |---------------|---------|------|
-| <img src="/images/svg/deepseek-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`deepseek` | DeepSeek | 领先的国产自研大模型，深度思考能力出众 |
-| <img src="/images/svg/doubao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`doubao` | 豆包 | 字节跳动旗下的智能 AI 助手，响应极速 |
-| <img src="/images/svg/yuanbao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`yuanbao` | 元宝 | 腾讯出品的 AI 助手，连接微信生态 |
-| <img src="/images/svg/kimi-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`kimi` | Kimi | 月之暗面出品，支持超长文本处理 |
-| <img src="/images/svg/qwen-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`qianwen` | 通义千问 | 阿里巴巴自研大模型，综合能力全面 |
-| <img src="/images/svg/quark-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`quark` | 夸克 | 夸克浏览器内置 AI，主打搜索与学习 |
-| <img src="/images/svg/baidu-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`baiduai` | 百度 AI+ | 百度推出的 AI 增强搜索 |
-| <img src="/images/svg/weibo-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`weibo_zhisou` | 微博智搜 | 微博推出的实时社交资讯 AI 搜索 |
-| <img src="/images/svg/wenxin-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`wenxinyiyan` | 文心一言 | 百度旗下大语言模型，深度整合百度生态 |
-| <img src="/images/svg/doubao-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`doubao_mobile` | 豆包移动版 | 字节跳动豆包移动端版本 |
-| <img src="/images/svg/deepseek-color.svg" width="18" height="18" style={{verticalAlign:'middle',marginRight:'6px'}} />`deepseek_mobile` | DeepSeek 移动端 | DeepSeek 移动端版本 |
+| <img src="./images/svg/deepseek-color.svg" width="18" height="18" align="middle" />&nbsp;`deepseek` | DeepSeek | 领先的国产自研大模型，深度思考能力出众 |
+| <img src="./images/svg/doubao-color.svg" width="18" height="18" align="middle" />&nbsp;`doubao` | 豆包 | 字节跳动旗下的智能 AI 助手，响应极速 |
+| <img src="./images/svg/yuanbao-color.svg" width="18" height="18" align="middle" />&nbsp;`yuanbao` | 元宝 | 腾讯出品的 AI 助手，连接微信生态 |
+| <img src="./images/svg/kimi-color.svg" width="18" height="18" align="middle" />&nbsp;`kimi` | Kimi | 月之暗面出品，支持超长文本处理 |
+| <img src="./images/svg/qwen-color.svg" width="18" height="18" align="middle" />&nbsp;`qianwen` | 通义千问 | 阿里巴巴自研大模型，综合能力全面 |
+| <img src="./images/svg/quark-color.svg" width="18" height="18" align="middle" />&nbsp;`quark` | 夸克 | 夸克浏览器内置 AI，主打搜索与学习 |
+| <img src="./images/svg/baidu-color.svg" width="18" height="18" align="middle" />&nbsp;`baiduai` | 百度文心 | 百度智能搜索，不支持深度思考 |
+| <img src="./images/svg/weibo-color.svg" width="18" height="18" align="middle" />&nbsp;`weibo_zhisou` | 微博智搜 | 微博推出的实时社交资讯 AI 搜索 |
+| <img src="./images/svg/antafu-color.svg" width="18" height="18" align="middle" />&nbsp;`antafu` | 蚂蚁阿福 | 蚂蚁集团旗下 AI 健康助手 |
+| <img src="./images/svg/douyinai-color.svg" width="18" height="18" align="middle" />&nbsp;`douyinai` | 抖音AI | 抖音AI搜索 |
+| <img src="./images/svg/openai-color.svg" width="18" height="18" align="middle" />&nbsp;`chatgpt` | ChatGPT | OpenAI 聊天模型 |
+| <img src="./images/svg/doubao-color.svg" width="18" height="18" align="middle" />&nbsp;`doubao_mobile` | 豆包移动版 | 豆包移动端正在升级维护，暂时无法提交任务 |
+| <img src="./images/svg/deepseek-color.svg" width="18" height="18" align="middle" />&nbsp;`deepseek_mobile` | DeepSeek 移动端 | DeepSeek 移动端版本 |
+| <img src="./images/svg/qwen-color.svg" width="18" height="18" align="middle" />&nbsp;`qianwen_mobile` | 通义千问移动端 | 通义千问移动端版本 |
+| <img src="./images/svg/yuanbao-color.svg" width="18" height="18" align="middle" />&nbsp;`yuanbao_mobile` | 元宝移动端 | 元宝的移动端版本 |
+| <img src="./images/svg/baidu-color.svg" width="18" height="18" align="middle" />&nbsp;`baidu_mobile` | 百度文心移动端 | 百度文心移动端，不支持深度思考 |
 
 :::note 持续接入中
 更多 AI 平台正在对接中，敬请期待。
@@ -97,12 +113,29 @@ curl -X GET "https://business-api.molizhishu.com/api/business/monitor/task/resul
 
 ## 监控模式
 
-| 模式值 | 名称 | 适用场景                            |
-|--------|------|---------------------------------|
-| `standard` | 基础/极速模式 | 快速获取 AI 基础回答                    |
-| `reasoning` | 深度思考 | 需要 AI 深度推理的复杂问题                 |
-| `search` | 联网搜索 | 需要 AI 结合实时网络信息回答（大部分模型默认开启联网搜索） |
-| `reasoning_search` | 深度+联网 | 同时启用深度思考和联网搜索                   |
+建议使用search和reasoning_search（**这两种模式下，大模型会返回信源**）；standard和reasoning 模式下，**大模型不会返回信源**。
+
+| Mode 值 | 名称 | 适用场景 | 国内模型费用 | 海外模型费用 | 描述 |
+|---------|----------|----------|--------------|--------------|------|
+| `standard` | 基础/极速模式 | 快速获取 AI 基础回答 | 仅收取基础费用 | 标准定价 **0.6 元/次**，折扣结算价 **0.24 元/次** | **大模型不返回信源** |
+| `reasoning` | 深度思考 | 需要 AI 深度推理的复杂问题 | **基础费用 + 0.09 元** | 标准定价 **0.6 元/次**，折扣结算价 **0.24 元/次** | **大模型不返回信源** |
+| `search` | 联网搜索 | 需要 AI 结合实时网络信息回答（大部分模型默认开启联网搜索） | 仅收取基础费用 | 标准定价 **0.6 元/次**，折扣结算价 **0.24 元/次** | 大模型会返回信源 |
+| `reasoning_search` | 深度+联网 | 同时启用深度思考和联网搜索 | **基础费用 + 0.09 元** | 标准定价 **0.6 元/次**，折扣结算价 **0.24 元/次** | 大模型会返回信源 |
+
+### 国内模型费用说明
+
+按子任务计费：基础费用为 **0.09 元/次**；使用 `reasoning` 或 `reasoning_search` 模式时，额外加收 **0.09 元/次**；开启截图时额外加收 **0.09 元/次**。
+
+例如：提交 1 个 prompt 到 1 个平台，使用 `reasoning_search` 模式并开启截图，则费用为 **0.09（基础费用）+ 0.09（深度思考）+ 0.09（截图）= 0.27 元**。
+
+### 海外模型费用说明
+
+因海外模型综合成本较高，新增模型的标准定价高于现有国内模型，详见下表：
+
+- **联网搜索 / 深度思考 / 联网搜索+深度思考**：标准定价 **0.6 元/次**；折扣结算价 **0.24 元/次**。
+- **带截图**：标准定价 **0.8 元/次**；折扣结算价 **0.32 元/次**。
+
+以上折扣结算价为最终计费标准，如有疑问，欢迎随时与我们沟通。
 
 ## 常见错误码
 

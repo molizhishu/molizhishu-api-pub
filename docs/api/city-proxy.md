@@ -6,9 +6,11 @@ sidebar_position: 9
 
 # 获取可用区域列表
 
-在提交批量任务时，可以通过 `regionCode` 参数指定节点使用的区域。这样可以确保节点从指定地区发起请求，获取地域化的数据结果。
+在提交批量任务时，可以通过 `regionCode` 参数指定节点使用的国内或海外区域。这样可以确保节点从指定地区发起请求，获取地域化的数据结果。
 
-## 接口说明
+## 国内区域
+
+### 接口说明
 
 **接口地址:** `GET /api/business/eip-edge/ports/city-info`
 
@@ -16,7 +18,7 @@ sidebar_position: 9
 
 **需要认证:** 否（公开接口）
 
-## 请求参数
+### 请求参数
 
 **Query 参数:**
 
@@ -24,7 +26,7 @@ sidebar_position: 9
 |-----|----|----|-----|----|
 | 无   | -  | -  | -   | -  |
 
-## 响应结果
+### 响应结果
 
 **成功响应:**
 ```json
@@ -50,9 +52,9 @@ sidebar_position: 9
 | 字段名 | 类型 | 描述                                                                                |
 |--------|------|-----------------------------------------------------------------------------------|
 | province | String | 区域名称                                                                              |
-| regionCode | Array&lt;String&gt; | 区域代码数组（行政区划代码），用于提交任务时的 `regionCode` 参数。**当前提交任务仅支持指定 1 个 regionCode（数组长度必须为 1）** |
+| regionCode | Array&lt;String&gt; | 区域代码数组（行政区划代码），提交任务时填入 `regionCode` 参数。**当前提交任务仅支持指定 1 个 regionCode（数组长度必须为 1）** |
 
-## 使用流程
+### 使用流程
 
 ```bash
 # 步骤1: 获取可用区域列表
@@ -72,9 +74,94 @@ curl -X POST "https://business-api.molizhishu.com/api/business/monitor/task/batc
   }'
 ```
 
-## 注意事项
+### 注意事项
 
 1. **regionCode 格式：** 必须是有效的行政区划代码，可以通过本接口获取
 2. **单区域限制：** 当前仅支持指定 1 个 regionCode（数组长度必须为 1）
 3. **未指定时的行为：** 如果不传 `regionCode` 参数，节点会使用默认策略
 4. **代码有效性：** regionCode 必须是当前可用的端口对应的区域代码，否则可能导致任务执行失败
+
+## 海外国家/地区
+
+在提交批量任务时，可以通过 `regionCode` 参数指定节点使用的海外国家或地区。以下接口用于获取当前支持的海外国家/地区及其区域代码。
+
+### 接口说明
+
+**接口地址:** `GET /api/business/eip-edge/regions/overseas`
+
+**接口描述:** 查询系统已配置的海外国家/地区及其 `regionCode`
+
+**需要认证:** 否（公开接口）
+
+### 请求参数
+
+**Query 参数:**
+
+| 参数名 | 类型 | 必需 | 默认值 | 描述 |
+|-----|----|----|-----|----|
+| 无   | -  | -  | -   | -  |
+
+### 响应结果
+
+**成功响应:**
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "message": "操作成功",
+  "data": [
+    {
+      "name": "美国",
+      "regionCode": ["138"]
+    },
+    {
+      "name": "日本",
+      "regionCode": ["169"]
+    },
+    {
+      "name": "香港",
+      "regionCode": ["223"]
+    },
+    {
+      "name": "新加坡",
+      "regionCode": ["224"]
+    }
+  ]
+}
+```
+
+**响应字段说明:**
+
+| 字段名 | 类型 | 描述 |
+|--------|------|------|
+| name | String | 国家/地区名称 |
+| regionCode | Array&lt;String&gt; | 区域代码数组，提交任务时填入 `regionCode` 参数。**当前提交任务仅支持指定 1 个 regionCode（数组长度必须为 1）** |
+
+### 请求示例
+
+```bash
+curl -X GET "https://business-api.molizhishu.com/api/business/eip-edge/regions/overseas" \
+  -H "Accept: application/json"
+```
+
+### 使用示例
+
+以下示例演示如何使用美国节点发起请求：
+
+```bash
+curl -X POST "https://business-api.molizhishu.com/api/business/monitor/task/batch/shared" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompts": ["人工智能发展趋势"],
+    "platforms": [{"platform": "chatgpt", "mode": "search"}],
+    "regionCode": ["138"]
+  }'
+```
+
+### 注意事项
+
+1. **单区域限制：** 当前提交任务仅支持指定 1 个 `regionCode`（数组长度必须为 1）
+2. **国家/地区范围：** 当前支持美国、日本、香港和新加坡，以接口实际返回结果为准
+3. **未指定时的行为：** 如果不传 `regionCode`，节点会使用默认策略

@@ -37,6 +37,7 @@ sidebar_position: 6
         "tasks": [
             {
                 "taskId": "05c517d143cd4f229786d294942b5a96",
+                "consumerTaskId": "consumerTask202606300001",
                 "prompts": [
                     "目前市场上销量较高的手机品牌有哪些"
                 ],
@@ -77,6 +78,7 @@ sidebar_position: 6
             },
             {
                 "taskId": "9aaa0a04211144c385d1186e76f85df3",
+                "consumerTaskId": null,
                 "prompts": [
                     "请帮我搜索最新款 iPhone型号，以及 iOS 版本",
                     "请帮我推荐一款智能手机"
@@ -117,6 +119,7 @@ sidebar_position: 6
 | size | Integer | 每页数量 |
 | tasks | Array | 任务列表 |
 | tasks[].taskId | String | 任务ID |
+| tasks[].consumerTaskId | String | 客户侧任务唯一标识，仅用于提交幂等；提交时未提供则为 `null` |
 | tasks[].prompts | Array | 提示词列表 |
 | tasks[].platforms | Array | 平台配置列表 |
 | tasks[].monitorKeyword | String | 监控关键词 |

@@ -82,6 +82,7 @@ sidebar_position: 6
 ```json
 {
     "taskId": "task_abc123",
+    "consumerTaskId": "consumerTask202606300001",
     "userId": 10001,
     "timestamp": 1712640000000,
     "status": "completed",
@@ -103,6 +104,7 @@ sidebar_position: 6
 | 字段 | 类型 | 说明                                               |
 |------|------|--------------------------------------------------|
 | taskId | String | 任务唯一标识                                           |
+| consumerTaskId | String | 客户侧任务唯一标识，仅用于提交幂等；提交时**未提供该字段则回调中也不包含此字段** |
 | userId | Long | 发起任务的用户 ID                                       |
 | timestamp | Long | 回调触发时间（毫秒级 Unix 时间戳）                             |
 | status | String | 任务状态，如: `pending/processing/stopped/completed/partial_completed/failed` |
