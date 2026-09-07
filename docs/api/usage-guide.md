@@ -71,4 +71,4 @@ curl -X PUT "https://business-api.molizhishu.com/api/business/monitor/task/callb
 - **任务级 callback**：提交任务时通过 `callbackUrl` 字段临时指定，仅对该次任务生效
 - 两者均未配置时，任务完成后不触发推送
 
-完整的触发条件、请求格式、重试策略及自定义回调说明，详见 [Callback 回调](./callback-config)。
+完整的触发条件、请求格式、重试策略及自定义回调说明，详见 [Callback 回调](./callback-config.md)。

@@ -51,7 +51,7 @@ sidebar_position: 7
 
 ## 停止后查询说明
 
-停止任务后，再次调用[查询任务状态](./query-task-status)或[获取任务结果](./get-task-result)接口时：
+停止任务后，再次调用[查询任务状态](./query-task-status.md)或[获取任务结果](./get-task-result.md)接口时：
 
 - 任务整体 `status` 为 `stopped`
 - `completedItems` / `failedItems` 按停止时刻已产出的可见结果重新统计
@@ -141,4 +141,4 @@ sidebar_position: 7
 
 - **请区分主任务与子任务状态**：主任务 `processing` 表示任务整体执行中，此时可以调用停止接口；子任务 `assigned` 表示已分配并运行中，这类子任务无法被立即中断。
 - **停止的实际拦截范围**：只有 `pending`（未分配）、`failed`（执行失败）的子任务会被拦截；`assigned` 状态（此为正在节点执行的任务，一般不会特别多）的子任务无法被中断，后续将执行完成并计费。
-- 停止是不可逆操作，任务一旦进入 `stopped` 状态将无法恢复继续执行，如需重新监控请重新[提交批量监控任务](./submit-task)。
+- 停止是不可逆操作，任务一旦进入 `stopped` 状态将无法恢复继续执行，如需重新监控请重新[提交批量监控任务](./submit-task.md)。

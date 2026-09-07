@@ -127,7 +127,7 @@ sidebar_position: 6
 | tasks[].competitors | Array | 竞品品牌列表 |
 | tasks[].competitors[].name | String | 竞品名称 |
 | tasks[].competitors[].aliases | Array | 竞品别名列表 |
-| tasks[].status | String | 任务状态，详见[查询任务状态](./query-task-status) |
+| tasks[].status | String | 任务状态，详见[查询任务状态](./query-task-status.md) |
 | tasks[].totalItems | Integer | 子任务总数 |
 | tasks[].completedItems | Integer | 已完成数 |
 | tasks[].failedItems | Integer | 失败数 |

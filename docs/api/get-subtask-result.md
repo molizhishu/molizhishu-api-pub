@@ -174,7 +174,7 @@ sidebar_position: 5
 | status | String | 子任务状态 |
 | time | Long | 完成时间戳（秒） |
 | pageScreenshot | String | 页面截图 URL（如有），有效期为 180 天 |
-| shareUrl | String | AI 平台官方对话分享链接（开启截图且平台支持时返回），详见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| shareUrl | String | AI 平台官方对话分享链接（开启截图且平台支持时返回），详见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | answerContent | String | AI回答内容（Markdown格式） |
 | referenceList | Array | 所有引用来源列表 |
 | referenceList[].index | Integer | 引用索引 |
@@ -195,9 +195,9 @@ sidebar_position: 5
 | reasoningProcess.summary | String | 推理摘要 |
 | reasoningProcess.content | String | 完整推理内容 |
 | recommendedQuestions | Array | 推荐追问列表（如有） |
-| searchKeywords | Array&lt;String&gt; | 搜索词，各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| searchKeywords | Array&lt;String&gt; | 搜索词，各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | mediaContent | Array | 多媒体内容（如有） |
-| videoList | Array | 回答中展示的视频列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| videoList | Array | 回答中展示的视频列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | videoList[].videoPlatform | String | 视频来源平台，如抖音、哔哩哔哩、微信视频号 |
 | videoList[].videoId | String | 视频编号 |
 | videoList[].title | String | 视频标题或简介 |
@@ -206,7 +206,7 @@ sidebar_position: 5
 | videoList[].author | String | 视频作者或频道名称 |
 | videoList[].duration | String | 视频时长 |
 | videoList[].position | Integer | 视频展示顺序 |
-| goods | Array | 回答中展示的商品列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| goods | Array | 回答中展示的商品列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | goods[].title | String | 商品标题 |
 | goods[].url | String | 商品详情链接 |
 | goods[].thumbnail | String | 商品图片链接 |

@@ -24,7 +24,7 @@ sidebar_position: 9
 |--------|------|------|------|--------|
 | startDate | String | 是 | 对账开始日期，格式：`yyyy-MM-dd` | "2026-06-01" |
 | endDate | String | 是 | 对账结束日期，格式：`yyyy-MM-dd` | "2026-06-30" |
-| aiModel | String | 否 | AI 模型过滤条件，详见[AI 平台列表](./overview#支持的-ai-平台列表)；不传则查询全部模型 | "doubao" |
+| aiModel | String | 否 | AI 模型过滤条件，详见[AI 平台列表](./overview.md#支持的-ai-平台列表)；不传则查询全部模型 | "doubao" |
 | taskId | String | 否 | API 任务 ID；传入后只统计该任务下的消费记录 | "e619e12d90d644ae9e64ea26472df007" |
 
 **请求限制:**
@@ -103,7 +103,7 @@ curl -X POST "https://business-api.molizhishu.com/api/reconciliation/summary" \
 |--------|------|------|--------|------|--------|
 | startDate | String | 是 | - | 对账开始日期，格式：`yyyy-MM-dd` | "2026-06-01" |
 | endDate | String | 是 | - | 对账结束日期，格式：`yyyy-MM-dd` | "2026-06-30" |
-| aiModel | String | 否 | - | AI 模型过滤条件，详见[AI 平台列表](./overview#支持的-ai-平台列表)；不传则查询全部模型 | "doubao" |
+| aiModel | String | 否 | - | AI 模型过滤条件，详见[AI 平台列表](./overview.md#支持的-ai-平台列表)；不传则查询全部模型 | "doubao" |
 | taskId | String | 否 | - | API 任务 ID；传入后只查询该任务下的消费明细 | "e619e12d90d644ae9e64ea26472df007" |
 | pageNum | Integer | 否 | 1 | 页码，从 1 开始 | 1 |
 | pageSize | Integer | 否 | 100 | 每页条数，最大 1000 | 100 |

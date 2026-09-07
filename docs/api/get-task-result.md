@@ -178,16 +178,16 @@ sidebar_position: 4
 |--------|------|------|
 | taskId | String | 批量任务ID |
 | consumerTaskId | String | 客户侧任务唯一标识，仅用于提交幂等；提交时未提供则为 `null` |
-| status | String | 任务状态，详见[查询任务状态](./query-task-status) |
+| status | String | 任务状态，详见[查询任务状态](./query-task-status.md) |
 | totalItems | Integer | 子任务总数 |
 | completedItems | Integer | 已完成数量 |
 | failedItems | Integer | 失败数量 |
-| subTaskList | Array | 子任务结果列表，结构与[获取子任务结果](./get-subtask-result)接口一致 |
+| subTaskList | Array | 子任务结果列表，结构与[获取子任务结果](./get-subtask-result.md)接口一致 |
 | subTaskList[].subTaskId | String | 子任务ID |
 | subTaskList[].platform | String | AI平台 |
 | subTaskList[].mode | String | 监控模式 |
 | subTaskList[].prompt | String | 监控提示词 |
-| subTaskList[].status | String | 子任务状态，详见[获取子任务结果](./get-subtask-result) |
+| subTaskList[].status | String | 子任务状态，详见[获取子任务结果](./get-subtask-result.md) |
 | subTaskList[].monitorKeywords | String | 监控关键词 |
 | subTaskList[].monitorKeywordAliases | List&lt;String&gt; | 监控词别名列表 |
 | subTaskList[].competitors | Array | 竞品词列表（含别名） |
@@ -195,7 +195,7 @@ sidebar_position: 4
 | subTaskList[].competitors[].aliases | List&lt;String&gt; | 竞品别名列表 |
 | subTaskList[].time | Long | 完成时间戳（秒） |
 | subTaskList[].pageScreenshot | String | 页面截图 URL（如有），有效期为 180 天 |
-| subTaskList[].shareUrl | String | AI 平台官方对话分享链接（开启截图且平台支持时返回），详见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| subTaskList[].shareUrl | String | AI 平台官方对话分享链接（开启截图且平台支持时返回），详见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | subTaskList[].answerContent | String | AI回答内容（Markdown格式） |
 | subTaskList[].referenceList | Array | 所有引用来源列表 |
 | subTaskList[].referenceList[].index | Integer | 引用索引 |
@@ -211,9 +211,9 @@ sidebar_position: 4
 | subTaskList[].reasoningProcess.summary | String | 推理摘要 |
 | subTaskList[].reasoningProcess.content | String | 完整推理内容 |
 | subTaskList[].recommendedQuestions | Array | 推荐追问列表（如有） |
-| subTaskList[].searchKeywords | Array&lt;String&gt; | 搜索词，各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| subTaskList[].searchKeywords | Array&lt;String&gt; | 搜索词，各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | subTaskList[].mediaContent | Array | 多媒体内容（如有） |
-| subTaskList[].videoList | Array | 回答中展示的视频列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| subTaskList[].videoList | Array | 回答中展示的视频列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | subTaskList[].videoList[].videoPlatform | String | 视频来源平台，如抖音、哔哩哔哩、微信视频号 |
 | subTaskList[].videoList[].videoId | String | 视频编号 |
 | subTaskList[].videoList[].title | String | 视频标题或简介 |
@@ -222,7 +222,7 @@ sidebar_position: 4
 | subTaskList[].videoList[].author | String | 视频作者或频道名称 |
 | subTaskList[].videoList[].duration | String | 视频时长 |
 | subTaskList[].videoList[].position | Integer | 视频展示顺序 |
-| subTaskList[].goods | Array | 回答中展示的商品列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview#商品视频搜索词分享链接支持情况) |
+| subTaskList[].goods | Array | 回答中展示的商品列表（如有），各平台支持情况见 [商品/视频/搜索词/分享链接支持情况](./overview.md#商品视频搜索词分享链接支持情况) |
 | subTaskList[].goods[].title | String | 商品标题 |
 | subTaskList[].goods[].url | String | 商品详情链接 |
 | subTaskList[].goods[].thumbnail | String | 商品图片链接 |

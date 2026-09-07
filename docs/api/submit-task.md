@@ -8,7 +8,7 @@ sidebar_position: 2
 
 **接口地址:** `POST /task/batch/shared`
 
-**接口描述:** 提交批量监控任务，支持多个问题共享相同的平台配置，自动创建子任务并异步执行。任务完成后可通过回调接收推送结果，详见 [Callback 回调](./callback-config)。
+**接口描述:** 提交批量监控任务，支持多个问题共享相同的平台配置，自动创建子任务并异步执行。任务完成后可通过回调接收推送结果，详见 [Callback 回调](./callback-config.md)。
 
 **需要认证:** 是
 
@@ -69,8 +69,8 @@ sidebar_position: 2
 | competitors | List&lt;CompetitorBrand&gt; | 否 | 竞品词列表（含别名），**最多 50 个**；当 `competitors` 中存在名称不为空的项时，`monitorKeywords` 必填                                                                                        | - |
 | prompts | List&lt;String&gt; | 是 | 监控提示词列表，每个提示词生成一个子任务，**最多 50 个**                                                                                                                               | ["目前市场上销量较高的手机品牌有哪些"] |
 | platforms | List&lt;PlatformConfig&gt; | 是 | 平台配置列表，详见下方说明，同一平台名称重复时自动去重                                                                                                                                    | - |
-| regionCode | List&lt;String&gt; | 否 | 区域代码列表，指定节点使用的区域，格式为行政区划代码（如：410000-河南省）。可用代码通过 `/api/business/eip-edge/ports/city-info` 接口获取，详见[获取可用区域列表](./city-proxy)。**当前仅支持指定 1 个 regionCode（数组长度必须为 1）**；**注意：移动端平台暂不支持地区设置，且不保证均匀随机。** | ["410000"] |
-| callbackUrl | String | 否 | 任务级 callback 地址，仅对本次任务生效；未提供时使用全局 callback 地址。详见 [Callback 回调](./callback-config)                                                                              | "https://your-domain.com/callback" |
+| regionCode | List&lt;String&gt; | 否 | 区域代码列表，指定节点使用的区域，格式为行政区划代码（如：410000-河南省）。可用代码通过 `/api/business/eip-edge/ports/city-info` 接口获取，详见[获取可用区域列表](./city-proxy.md)。**当前仅支持指定 1 个 regionCode（数组长度必须为 1）**；**注意：移动端平台暂不支持地区设置，且不保证均匀随机。** | ["410000"] |
+| callbackUrl | String | 否 | 任务级 callback 地址，仅对本次任务生效；未提供时使用全局 callback 地址。详见 [Callback 回调](./callback-config.md)                                                                              | "https://your-domain.com/callback" |
 | consumerTaskId | String | 否 | 客户侧任务唯一标识，**仅用于提交幂等**。为空或不传时不启用幂等；如需启用，须填写 **8~64 个字母或数字**。相同 `consumerTaskId` 重复提交时，会返回首次创建的任务且不重复扣费。详见下方[提交幂等](#提交幂等) | "consumerTask202606300001" |
 
 **PlatformConfig 对象说明:**
@@ -78,7 +78,7 @@ sidebar_position: 2
 | 字段名 | 类型 | 必需 | 描述 | 可选值 |
 |--------|------|------|------|--------|
 | platform | String | 是 | AI平台名称 | "deepseek"、"doubao"、"yuanbao" 等 |
-| mode | String | 是 | 监控模式，详见[概述](./overview#监控模式说明) | "standard"、"reasoning"、"search"、"reasoning_search" |
+| mode | String | 是 | 监控模式，详见[概述](./overview.md#监控模式说明) | "standard"、"reasoning"、"search"、"reasoning_search" |
 | screenshot | Integer | 否 | 是否截图（默认：0） | 0-不截图、1-截图、2-提及截图 |
 
 **CompetitorBrand 对象说明**

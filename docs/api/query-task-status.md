@@ -90,7 +90,7 @@ sidebar_position: 3
 | subTaskList[].prompt | String | 监控提示词 |
 | subTaskList[].platform | String | AI平台 |
 | subTaskList[].mode | String | 监控模式 |
-| subTaskList[].status | String | 子任务状态，详见[获取子任务结果](./get-subtask-result) |
+| subTaskList[].status | String | 子任务状态，详见[获取子任务结果](./get-subtask-result.md) |
 | subTaskList[].monitorKeywords | String | 监控关键词 |
 | subTaskList[].monitorKeywordAliases | List&lt;String&gt; | 监控词别名列表 |
 | subTaskList[].competitors | Array | 竞品词列表（含别名） |
@@ -106,7 +106,7 @@ sidebar_position: 3
 | completed | 任务全部完成且无失败 |
 | partial_completed | 任务部分完成，有成功也有失败 |
 | failed | 任务全部失败 |
-| stopped | 任务被人工停止，详见[停止监控任务](./stop-task) |
+| stopped | 任务被人工停止，详见[停止监控任务](./stop-task.md) |
 
 ## 轮询建议
 

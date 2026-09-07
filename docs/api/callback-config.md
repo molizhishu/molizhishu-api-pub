@@ -111,7 +111,7 @@ sidebar_position: 6
 | totalItems | Integer | 子任务总数                                            |
 | completedItems | Integer | 成功完成的子任务数                                        |
 | failedItems | Integer | 失败的子任务数                                          |
-| subTaskList | Array | 子任务结果列表，结构与[获取任务结果](./get-task-result)一致         |
+| subTaskList | Array | 子任务结果列表，结构与[获取任务结果](./get-task-result.md)一致         |
 
 **响应约定：**
 
@@ -137,4 +137,4 @@ sidebar_position: 6
 
 建议在您的回调接口中实现**幂等处理**，以应对重试场景（同一 `taskId` 可能收到多次推送）。
 
-如需主动查询任务结果，可使用[获取任务结果](./get-task-result)作为补偿。
+如需主动查询任务结果，可使用[获取任务结果](./get-task-result.md)作为补偿。
